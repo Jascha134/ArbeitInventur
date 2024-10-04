@@ -12,7 +12,7 @@ namespace ArbeitInventur
         private ImplantatManager manager;
         private List<ImplantatSystem> implantatsysteme;
         private JsonDateiÜberwacher jsonÜberwacher;
-        private string jsonDateiPfad = Properties.Settings.Default.DataJSON; // Pfad zur JSON-Datei auf dem Server
+        private string jsonDateiPfad = Properties.Settings.Default.DataJSON+ "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private System.Timers.Timer debounceTimer;
         public static Form2 instanze;
 
@@ -94,6 +94,7 @@ namespace ArbeitInventur
             var systemsWithDetails = implantatsysteme.SelectMany(system => system.Details.Select(detail => new
             {
                 SystemName = system.SystemName,
+                Kategorie = detail.Kategorie,
                 DetailName = detail.Beschreibung,
                 Menge = detail.Menge,
                 Mindestbestand = detail.Mindestbestand
@@ -105,7 +106,8 @@ namespace ArbeitInventur
                 string lowerFilter = filter.ToLower(); // Filter in Kleinbuchstaben umwandeln
                 systemsWithDetails = systemsWithDetails
                     .Where(item => item.SystemName.ToLower().Contains(lowerFilter) ||
-                                   item.DetailName.ToLower().Contains(lowerFilter))
+                                   item.DetailName.ToLower().Contains(lowerFilter) ||
+                                   item.Kategorie.ToLower().Contains(lowerFilter))
                     .ToList();
             }
 
@@ -123,6 +125,7 @@ namespace ArbeitInventur
 
                     // Spaltenüberschriften anpassen
                     dataGridViewOverview.Columns["SystemName"].HeaderText = "System Name";
+                    dataGridViewOverview.Columns["Kategorie"].HeaderText = "Kategorie";
                     dataGridViewOverview.Columns["DetailName"].HeaderText = "Detail Name";
                     dataGridViewOverview.Columns["Menge"].HeaderText = "Menge";
                     dataGridViewOverview.Columns["Mindestbestand"].HeaderText = "Mindestbestand";
@@ -235,6 +238,7 @@ namespace ArbeitInventur
                                         .Select(detail => (object)new
                                         {
                                             SystemName = system.SystemName,
+                                            Kategorie = detail.Kategorie,
                                             DetailName = detail.Beschreibung,
                                             Menge = detail.Menge,
                                             Mindestbestand = detail.Mindestbestand
@@ -247,6 +251,7 @@ namespace ArbeitInventur
                                         .Select(detail => (object)new
                                         {
                                             SystemName = system.SystemName,
+                                            Kategorie = detail.Kategorie,
                                             DetailName = detail.Beschreibung,
                                             Menge = detail.Menge,
                                             Mindestbestand = detail.Mindestbestand
@@ -268,7 +273,8 @@ namespace ArbeitInventur
                     // Spaltenüberschriften anpassen
                     if (dataGridViewOverview.Columns.Contains("SystemName"))
                         dataGridViewOverview.Columns["SystemName"].HeaderText = "System Name";
-
+                    if (dataGridViewOverview.Columns.Contains("Kategorie"))
+                        dataGridViewOverview.Columns["Kategorie"].HeaderText = "Kategorie";
                     if (dataGridViewOverview.Columns.Contains("DetailName"))
                         dataGridViewOverview.Columns["DetailName"].HeaderText = "Detail Name";
 
@@ -284,5 +290,4 @@ namespace ArbeitInventur
             }
         }
     }
-
 }

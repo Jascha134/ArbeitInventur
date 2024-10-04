@@ -9,16 +9,16 @@ namespace ArbeitInventur
 {
     public partial class UC_Chatcs : UserControl
     {
-        private string jsonDateiPfad = "C:\\Users\\jakov\\Desktop\\Impla\\chatMessages.json"; // Pfad zur JSON-Datei auf dem Server
+        private string jsonDateiPfad = Properties.Settings.Default.DataJSON + "\\chatMessages.json"; // Pfad zur JSON-Datei auf dem Server
         private JsonDateiÜberwacher jsonÜberwacher;
         private List<ChatMessage> chatMessages = new List<ChatMessage>();
         private System.Timers.Timer debounceTimer;
-        private string User;
+        private Benutzer User;
         public UC_Chatcs(Benutzer benutzer)
         {
             InitializeComponent();
             // JSON-Überwachung starten
-            User = benutzer.Name;
+            User = benutzer;
             lb_Benutzer.Text = benutzer.Name + " :";
             jsonÜberwacher = new JsonDateiÜberwacher(jsonDateiPfad);
             jsonÜberwacher.DateiGeändert += JsonDateiWurdeGeändert;
@@ -31,7 +31,6 @@ namespace ArbeitInventur
             // Nachrichten laden und anzeigen
             LadeNachrichtenUndAnzeigen();
 
-            txt_Chat.KeyDown += txt_Chat_KeyDown;
         }
     
         private void button1_Click(object sender, EventArgs e)
@@ -40,7 +39,7 @@ namespace ArbeitInventur
             // Nachricht erstellen
             var neueNachricht = new ChatMessage
             {
-                Sender = User, // Oder ein anderer Identifier
+                Sender = User.Name, // Oder ein anderer Identifier
                 Message = txt_Chat.Text,
                 Timestamp = DateTime.Now
             };

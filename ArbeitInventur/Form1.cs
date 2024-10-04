@@ -9,7 +9,7 @@ namespace ArbeitInventur
 {
     public partial class Form1 : Form
     {
-        private string jsonDateiPfad = Properties.Settings.Default.DataJSON; // Pfad zur JSON-Datei auf dem Server
+        private string jsonDateiPfad = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private Benutzer benutzer;
 
         public Form1(Benutzer benutzer)
@@ -31,7 +31,6 @@ namespace ArbeitInventur
 
         private ImplantatManager manager = new ImplantatManager();
         private List<ImplantatSystem> implantatsysteme = new List<ImplantatSystem>();
-
         private void Form1_Load(object sender, EventArgs e)
         {
             lb_Benutzer.Text = "Benutzer : " + benutzer.Name;
@@ -83,7 +82,8 @@ namespace ArbeitInventur
                     try
                     {
                         // Neue Detailinformationen sammeln
-                        string detailName = textBoxName.Text;
+                        string kategorie = textBoxKategorie.Text;
+                        string detailName = textBoxBeschreibung.Text;
                         int menge = int.Parse(textBoxMenge.Text);
                         int mindestbestand = int.Parse(textBoxMindestbestand.Text);
 
@@ -99,6 +99,7 @@ namespace ArbeitInventur
                             // Neues Detail für das Implantatsystem erstellen (Hinzufügen)
                             var neuesDetail = new ImplantatSystemDetails
                             {
+                                Kategorie = kategorie,
                                 Beschreibung = detailName,
                                 Menge = menge,
                                 Mindestbestand = mindestbestand
@@ -110,6 +111,7 @@ namespace ArbeitInventur
                         else
                         {
                             // Bearbeitung des ausgewählten Details (Bearbeiten)
+                            aktuellBearbeitetesDetail.Kategorie = kategorie;
                             aktuellBearbeitetesDetail.Beschreibung = detailName;
                             aktuellBearbeitetesDetail.Menge = menge;
                             aktuellBearbeitetesDetail.Mindestbestand = mindestbestand;
@@ -129,7 +131,7 @@ namespace ArbeitInventur
                         MindestbestandSpalteAusblenden();
 
                         // Eingabefelder leeren
-                        textBoxName.Clear();
+                        textBoxBeschreibung.Clear();
                         textBoxMenge.Clear();
                         textBoxMindestbestand.Clear();
                     }
@@ -150,6 +152,7 @@ namespace ArbeitInventur
         }
         private void dataGridView2_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            aktuellBearbeitetesDetail = null ;
             // Überprüfen, ob eine gültige Zeile ausgewählt wurde
             if (e.RowIndex >= 0)
             {
@@ -157,16 +160,17 @@ namespace ArbeitInventur
                 var selectedRow = dataGridView2.Rows[e.RowIndex];
 
                 // Werte der aktuellen Zeile in die Textboxen übertragen
-                textBoxName.Text = selectedRow.Cells["Name"].Value.ToString();
+                textBoxKategorie.Text = selectedRow.Cells["Kategorie"].Value.ToString();
+                textBoxBeschreibung.Text = selectedRow.Cells["Beschreibung"].Value.ToString();
                 textBoxMenge.Text = selectedRow.Cells["Menge"].Value.ToString();
                 textBoxMindestbestand.Text = selectedRow.Cells["Mindestbestand"].Value.ToString();
 
                 // Das ausgewählte Detail finden und für die Bearbeitung speichern
-                string detailName = selectedRow.Cells["Name"].Value.ToString();
+                string detailBeschreibung = selectedRow.Cells["Beschreibung"].Value.ToString();
                 var selectedSystem = implantatsysteme.FirstOrDefault(system => system.SystemName == dataGridView1.CurrentRow.Cells["SystemName"].Value.ToString());
                 if (selectedSystem != null)
                 {
-                    aktuellBearbeitetesDetail = selectedSystem.Details.FirstOrDefault(detail => detail.Beschreibung == detailName);
+                    aktuellBearbeitetesDetail = selectedSystem.Details.FirstOrDefault(detail => detail.Beschreibung == detailBeschreibung);
                 }
             }
         }
@@ -283,7 +287,7 @@ namespace ArbeitInventur
                     if (selectedSystem != null)
                     {
                         // Den Namen des zu löschenden Details erhalten
-                        string detailName = dataGridView2.CurrentRow.Cells["Name"].Value.ToString();
+                        string detailName = dataGridView2.CurrentRow.Cells["Kategorie"].Value.ToString();
 
                         // Bestätigung zum Löschen anfordern
                         var result = MessageBox.Show($"Sind Sie sicher, dass Sie '{detailName}' löschen möchten?", "Löschen bestätigen", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
@@ -294,7 +298,7 @@ namespace ArbeitInventur
                             try
                             {
                                 // Das ausgewählte Detail finden
-                                var detailToDelete = selectedSystem.Details.FirstOrDefault(detail => detail.Beschreibung == detailName);
+                                var detailToDelete = selectedSystem.Details.FirstOrDefault(detail => detail.Kategorie == detailName);
 
                                 if (detailToDelete != null)
                                 {
@@ -309,10 +313,9 @@ namespace ArbeitInventur
                                     dataGridView2.DataSource = selectedSystem.Details.ToList();
 
                                     // Eingabefelder leeren
-                                    textBoxName.Clear();
+                                    textBoxBeschreibung.Clear();
                                     textBoxMenge.Clear();
                                     textBoxMindestbestand.Clear();
-
                                 }
                             }
                             catch (Exception ex)
@@ -414,7 +417,6 @@ namespace ArbeitInventur
 
             return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : string.Empty;
         }
-
         private void button6_Click(object sender, EventArgs e)
         {
             panel1.Controls.Clear();
@@ -432,19 +434,16 @@ namespace ArbeitInventur
             // Beispiel: Panel könnte vorher Label oder TextBox enthalten haben, dies hier wieder hinzufügen
             panel1.Controls.AddRange(originalControls);
         }
-
         private void btn_Chat_Click(object sender, EventArgs e)
         {
             UC_Chatcs uC_Chatcs = new UC_Chatcs(benutzer);
             panel1.Controls.Clear();
             panel1.Controls.Add(uC_Chatcs);
         }
-
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             Application.Exit();
         }
-
         private void btn_Minus_Click(object sender, EventArgs e)
         {
             if(textBoxMenge.Text != "")
@@ -457,7 +456,6 @@ namespace ArbeitInventur
                 textBoxMenge.Text = index.ToString();
             }
         }
-
         private void btn_Plus_Click(object sender, EventArgs e)
         {
             if (textBoxMenge.Text != "")
@@ -469,7 +467,6 @@ namespace ArbeitInventur
             else
                 textBoxMenge.Text = "0";
         }
-
         private void btn_MinusMindes_Click(object sender, EventArgs e)
         {
             if (textBoxMindestbestand.Text != "")
@@ -482,7 +479,6 @@ namespace ArbeitInventur
                 textBoxMindestbestand.Text = index.ToString();
             }
         }
-
         private void btn_PlusMindest_Click(object sender, EventArgs e)
         {
             if (textBoxMindestbestand.Text != "")
@@ -494,7 +490,6 @@ namespace ArbeitInventur
             else
                 textBoxMindestbestand.Text = "0";
         }
-
         private void btn_UC_Übersicht_Click(object sender, EventArgs e)
         {
             // Prüfen, ob Form2 bereits geöffnet ist
@@ -509,6 +504,13 @@ namespace ArbeitInventur
                 // Wenn Form2 bereits geöffnet ist, bringe es in den Vordergrund
                 Form2.instanze.BringToFront();
             }
+        }
+        private void btn_New_Click(object sender, EventArgs e)
+        {
+            aktuellBearbeitetesDetail = null;
+            textBoxBeschreibung.Clear();
+            textBoxMenge.Clear();
+            textBoxMindestbestand.Clear();
         }
     }
 }

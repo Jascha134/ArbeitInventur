@@ -7,7 +7,7 @@ namespace ArbeitInventur
 {
     public class ImplantatManager
     {
-        private string dateiPfad = "C:\\Users\\jakov\\Desktop\\Impla//implantatsysteme.json"; // Der Pfad zur JSON-Datei
+        private string dateiPfad = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Der Pfad zur JSON-Datei
 
         // Implantatsysteme aus der JSON-Datei laden
         public List<ImplantatSystem> LadeImplantatsysteme()

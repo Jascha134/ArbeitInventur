@@ -31,7 +31,7 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.dataGridView2 = new System.Windows.Forms.DataGridView();
             this.button1 = new System.Windows.Forms.Button();
-            this.textBoxName = new System.Windows.Forms.TextBox();
+            this.textBoxBeschreibung = new System.Windows.Forms.TextBox();
             this.textBoxMenge = new System.Windows.Forms.TextBox();
             this.textBoxMindestbestand = new System.Windows.Forms.TextBox();
             this.textBoxSystemName = new System.Windows.Forms.TextBox();
@@ -41,8 +41,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.button5 = new System.Windows.Forms.Button();
+            this.buttonSystemDelete = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.textBoxKategorie = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.btn_PlusMindest = new System.Windows.Forms.Button();
             this.btn_MinusMindes = new System.Windows.Forms.Button();
             this.btn_Plus = new System.Windows.Forms.Button();
@@ -52,8 +54,7 @@
             this.button7 = new System.Windows.Forms.Button();
             this.btn_Chat = new System.Windows.Forms.Button();
             this.btn_UC_Übersicht = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
+            this.btn_New = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -97,13 +98,13 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // textBoxName
+            // textBoxBeschreibung
             // 
-            this.textBoxName.Location = new System.Drawing.Point(463, 50);
-            this.textBoxName.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.textBoxName.Name = "textBoxName";
-            this.textBoxName.Size = new System.Drawing.Size(228, 26);
-            this.textBoxName.TabIndex = 4;
+            this.textBoxBeschreibung.Location = new System.Drawing.Point(463, 50);
+            this.textBoxBeschreibung.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxBeschreibung.Name = "textBoxBeschreibung";
+            this.textBoxBeschreibung.Size = new System.Drawing.Size(228, 26);
+            this.textBoxBeschreibung.TabIndex = 4;
             // 
             // textBoxMenge
             // 
@@ -191,23 +192,24 @@
             this.label4.TabIndex = 14;
             this.label4.Text = "Mindestbestand :";
             // 
-            // button5
+            // buttonSystemDelete
             // 
-            this.button5.Location = new System.Drawing.Point(214, 160);
-            this.button5.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(111, 46);
-            this.button5.TabIndex = 15;
-            this.button5.Text = "Löschen";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
+            this.buttonSystemDelete.Location = new System.Drawing.Point(214, 160);
+            this.buttonSystemDelete.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.buttonSystemDelete.Name = "buttonSystemDelete";
+            this.buttonSystemDelete.Size = new System.Drawing.Size(111, 46);
+            this.buttonSystemDelete.TabIndex = 15;
+            this.buttonSystemDelete.Text = "Löschen";
+            this.buttonSystemDelete.UseVisualStyleBackColor = true;
+            this.buttonSystemDelete.Click += new System.EventHandler(this.button5_Click);
             // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.textBox1);
+            this.panel1.Controls.Add(this.btn_New);
+            this.panel1.Controls.Add(this.textBoxKategorie);
             this.panel1.Controls.Add(this.label5);
             this.panel1.Controls.Add(this.btn_PlusMindest);
             this.panel1.Controls.Add(this.btn_MinusMindes);
@@ -216,11 +218,11 @@
             this.panel1.Controls.Add(this.lb_Benutzer);
             this.panel1.Controls.Add(this.dataGridView1);
             this.panel1.Controls.Add(this.textBoxMenge);
-            this.panel1.Controls.Add(this.button5);
+            this.panel1.Controls.Add(this.buttonSystemDelete);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Controls.Add(this.textBoxMindestbestand);
             this.panel1.Controls.Add(this.dataGridView2);
-            this.panel1.Controls.Add(this.textBoxName);
+            this.panel1.Controls.Add(this.textBoxBeschreibung);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.button2);
             this.panel1.Controls.Add(this.label4);
@@ -233,6 +235,24 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1155, 623);
             this.panel1.TabIndex = 16;
+            // 
+            // textBoxKategorie
+            // 
+            this.textBoxKategorie.Location = new System.Drawing.Point(463, 14);
+            this.textBoxKategorie.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.textBoxKategorie.Name = "textBoxKategorie";
+            this.textBoxKategorie.Size = new System.Drawing.Size(228, 26);
+            this.textBoxKategorie.TabIndex = 25;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(329, 17);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(85, 20);
+            this.label5.TabIndex = 26;
+            this.label5.Text = "Kategorie :";
             // 
             // btn_PlusMindest
             // 
@@ -336,23 +356,16 @@
             this.btn_UC_Übersicht.UseVisualStyleBackColor = true;
             this.btn_UC_Übersicht.Click += new System.EventHandler(this.btn_UC_Übersicht_Click);
             // 
-            // textBox1
+            // btn_New
             // 
-            this.textBox1.Location = new System.Drawing.Point(463, 14);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(228, 26);
-            this.textBox1.TabIndex = 25;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(329, 17);
-            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(85, 20);
-            this.label5.TabIndex = 26;
-            this.label5.Text = "Kategorie :";
+            this.btn_New.Location = new System.Drawing.Point(699, 14);
+            this.btn_New.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btn_New.Name = "btn_New";
+            this.btn_New.Size = new System.Drawing.Size(56, 46);
+            this.btn_New.TabIndex = 27;
+            this.btn_New.Text = "Neu";
+            this.btn_New.UseVisualStyleBackColor = true;
+            this.btn_New.Click += new System.EventHandler(this.btn_New_Click);
             // 
             // Form1
             // 
@@ -385,7 +398,7 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.DataGridView dataGridView2;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBoxName;
+        private System.Windows.Forms.TextBox textBoxBeschreibung;
         private System.Windows.Forms.TextBox textBoxMenge;
         private System.Windows.Forms.TextBox textBoxMindestbestand;
         private System.Windows.Forms.TextBox textBoxSystemName;
@@ -395,7 +408,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Button buttonSystemDelete;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button7;
@@ -406,8 +419,9 @@
         private System.Windows.Forms.Button btn_PlusMindest;
         private System.Windows.Forms.Button btn_MinusMindes;
         private System.Windows.Forms.Button btn_UC_Übersicht;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBoxKategorie;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btn_New;
     }
 }
 
