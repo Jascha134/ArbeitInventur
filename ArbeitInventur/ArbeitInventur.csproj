@@ -69,10 +69,18 @@
     <Compile Include="Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
     </Compile>
+    <Compile Include="StartLoadProcces.cs" />
+    <Compile Include="UC_History.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UC_History.Designer.cs">
+      <DependentUpon>UC_History.cs</DependentUpon>
+    </Compile>
     <Compile Include="ImplantatManager.cs" />
     <Compile Include="ImplantatSystem.cs" />
     <Compile Include="ImplantatSystemDetails.cs" />
     <Compile Include="JsonDateiÜberwacher.cs" />
+    <Compile Include="LogHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UC_Chatcs.cs">
@@ -95,6 +103,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form2.resx">
       <DependentUpon>Form2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UC_History.resx">
+      <DependentUpon>UC_History.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

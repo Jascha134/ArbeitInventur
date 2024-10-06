@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace ArbeitInventur
 {
-    public class Benutzer
+    internal class StartLoadProcces
     {
-        public string Name { get; set; }
-        public int Pw { get; set; }    }
+    }
 }

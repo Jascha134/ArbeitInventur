@@ -9,8 +9,11 @@ namespace ArbeitInventur
 {
     public partial class Form1 : Form
     {
-        private string jsonDateiPfad = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
+        private string implantatsystem = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
+        private string logg = Properties.Settings.Default.DataJSON + "\\log.json";
+
         private Benutzer benutzer;
+        private LogHandler logHandler;
 
         public Form1(Benutzer benutzer)
         {
@@ -81,14 +84,15 @@ namespace ArbeitInventur
                 {
                     try
                     {
+                        logHandler = new LogHandler(logg, benutzer);
                         // Neue Detailinformationen sammeln
                         string kategorie = textBoxKategorie.Text;
-                        string detailName = textBoxBeschreibung.Text;
+                        string beschreibung = textBoxBeschreibung.Text;
                         int menge = int.Parse(textBoxMenge.Text);
                         int mindestbestand = int.Parse(textBoxMindestbestand.Text);
 
                         // Überprüfen, ob der Detailname leer ist
-                        if (string.IsNullOrWhiteSpace(detailName))
+                        if (string.IsNullOrWhiteSpace(beschreibung))
                         {
                             MessageBox.Show("Bitte geben Sie einen gültigen Namen für das Detail ein.");
                             return;
@@ -100,21 +104,24 @@ namespace ArbeitInventur
                             var neuesDetail = new ImplantatSystemDetails
                             {
                                 Kategorie = kategorie,
-                                Beschreibung = detailName,
+                                Beschreibung = beschreibung,
                                 Menge = menge,
                                 Mindestbestand = mindestbestand
                             };
 
                             // Detail zur Liste der Details des ausgewählten Systems hinzufügen
                             selectedSystem.Details.Add(neuesDetail);
+                            logHandler.LogAction($"Hinzugefügt : {neuesDetail.Kategorie} {neuesDetail.Beschreibung} || Menge: {neuesDetail.Menge} || Mindestbestabd: {neuesDetail.Mindestbestand} ");
                         }
                         else
                         {
                             // Bearbeitung des ausgewählten Details (Bearbeiten)
                             aktuellBearbeitetesDetail.Kategorie = kategorie;
-                            aktuellBearbeitetesDetail.Beschreibung = detailName;
+                            aktuellBearbeitetesDetail.Beschreibung = beschreibung;
                             aktuellBearbeitetesDetail.Menge = menge;
                             aktuellBearbeitetesDetail.Mindestbestand = mindestbestand;
+
+                            logHandler.LogAction($"Bearbeitet :{aktuellBearbeitetesDetail.Beschreibung} zu {benutzer}");
 
                             // Nach der Bearbeitung aufheben
                             aktuellBearbeitetesDetail = null;
@@ -179,6 +186,7 @@ namespace ArbeitInventur
         {
             try
             {
+                logHandler = new LogHandler(logg, benutzer);
                 // Eingabe für den Systemnamen sammeln
                 string systemName = textBoxSystemName.Text;
 
@@ -204,14 +212,18 @@ namespace ArbeitInventur
 
                     // Neues System zur Liste der Implantatsysteme hinzufügen
                     implantatsysteme.Add(neuesSystem);
+                    logHandler.LogAction(neuesSystem.SystemName + ": wurde zur liste hinzugefügt ");
                 }
                 else
                 {
+                    string backup = aktuellBearbeitetesSystem.SystemName;
                     // System bearbeiten
                     aktuellBearbeitetesSystem.SystemName = systemName;
 
                     // Bearbeitung aufheben
                     aktuellBearbeitetesSystem = null;
+
+                    logHandler.LogAction($"Firmen / Hersteller - {backup} wurde zu {systemName} geändert");
                 }
 
                 // Änderungen speichern
@@ -286,8 +298,10 @@ namespace ArbeitInventur
 
                     if (selectedSystem != null)
                     {
+                        logHandler = new LogHandler(logg, benutzer);
+
                         // Den Namen des zu löschenden Details erhalten
-                        string detailName = dataGridView2.CurrentRow.Cells["Kategorie"].Value.ToString();
+                        string detailName = dataGridView2.CurrentRow.Cells["Beschreibung"].Value.ToString();
 
                         // Bestätigung zum Löschen anfordern
                         var result = MessageBox.Show($"Sind Sie sicher, dass Sie '{detailName}' löschen möchten?", "Löschen bestätigen", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
@@ -298,10 +312,11 @@ namespace ArbeitInventur
                             try
                             {
                                 // Das ausgewählte Detail finden
-                                var detailToDelete = selectedSystem.Details.FirstOrDefault(detail => detail.Kategorie == detailName);
+                                var detailToDelete = selectedSystem.Details.FirstOrDefault(detail => detail.Beschreibung == detailName);
 
                                 if (detailToDelete != null)
                                 {
+                                    logHandler.LogAction($"Löschen : {selectedSystemName} -> {detailName} wurde gelöscht");
                                     // Detail aus der Liste entfernen
                                     selectedSystem.Details.Remove(detailToDelete);
 
@@ -344,6 +359,7 @@ namespace ArbeitInventur
             // Überprüfen, ob eine gültige Zeile in dataGridView1 ausgewählt wurde
             if (dataGridView1.CurrentRow != null)
             {
+                logHandler = new LogHandler(logg, benutzer);
                 // Den Systemnamen des ausgewählten Systems erhalten
                 string selectedSystemName = dataGridView1.CurrentRow.Cells["SystemName"].Value.ToString();
 
@@ -371,8 +387,9 @@ namespace ArbeitInventur
                             dataGridView1.DataSource = implantatsysteme.Select(system => new
                             {
                                 system.SystemName
-                            }).ToList();
 
+                            }).ToList();
+                            logHandler.LogAction($"Firmen / Hersteller - {selectedSystem.SystemName} wurde gelöscht ");
                             // DataGridView für Details leeren
                             dataGridView2.DataSource = null;
 
@@ -511,6 +528,19 @@ namespace ArbeitInventur
             textBoxBeschreibung.Clear();
             textBoxMenge.Clear();
             textBoxMindestbestand.Clear();
+        }
+
+        private void btn_SystemNameNew_Click(object sender, EventArgs e)
+        {
+            aktuellBearbeitetesSystem = null;
+            textBoxSystemName.Clear();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            UC_History uC_Chatcs = new UC_History(benutzer);
+            panel1.Controls.Clear();
+            panel1.Controls.Add(uC_Chatcs);
         }
     }
 }

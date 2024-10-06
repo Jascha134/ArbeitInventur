@@ -43,6 +43,8 @@
             this.label4 = new System.Windows.Forms.Label();
             this.buttonSystemDelete = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btn_SystemNameNew = new System.Windows.Forms.Button();
+            this.btn_New = new System.Windows.Forms.Button();
             this.textBoxKategorie = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.btn_PlusMindest = new System.Windows.Forms.Button();
@@ -54,7 +56,7 @@
             this.button7 = new System.Windows.Forms.Button();
             this.btn_Chat = new System.Windows.Forms.Button();
             this.btn_UC_Übersicht = new System.Windows.Forms.Button();
-            this.btn_New = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             this.panel1.SuspendLayout();
@@ -127,7 +129,7 @@
             this.textBoxSystemName.Location = new System.Drawing.Point(73, 120);
             this.textBoxSystemName.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.textBoxSystemName.Name = "textBoxSystemName";
-            this.textBoxSystemName.Size = new System.Drawing.Size(252, 26);
+            this.textBoxSystemName.Size = new System.Drawing.Size(187, 26);
             this.textBoxSystemName.TabIndex = 8;
             // 
             // button2
@@ -208,6 +210,7 @@
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Controls.Add(this.btn_SystemNameNew);
             this.panel1.Controls.Add(this.btn_New);
             this.panel1.Controls.Add(this.textBoxKategorie);
             this.panel1.Controls.Add(this.label5);
@@ -235,6 +238,28 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1155, 623);
             this.panel1.TabIndex = 16;
+            // 
+            // btn_SystemNameNew
+            // 
+            this.btn_SystemNameNew.Location = new System.Drawing.Point(268, 120);
+            this.btn_SystemNameNew.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btn_SystemNameNew.Name = "btn_SystemNameNew";
+            this.btn_SystemNameNew.Size = new System.Drawing.Size(56, 27);
+            this.btn_SystemNameNew.TabIndex = 28;
+            this.btn_SystemNameNew.Text = "Neu";
+            this.btn_SystemNameNew.UseVisualStyleBackColor = true;
+            this.btn_SystemNameNew.Click += new System.EventHandler(this.btn_SystemNameNew_Click);
+            // 
+            // btn_New
+            // 
+            this.btn_New.Location = new System.Drawing.Point(699, 14);
+            this.btn_New.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btn_New.Name = "btn_New";
+            this.btn_New.Size = new System.Drawing.Size(56, 46);
+            this.btn_New.TabIndex = 27;
+            this.btn_New.Text = "Neu";
+            this.btn_New.UseVisualStyleBackColor = true;
+            this.btn_New.Click += new System.EventHandler(this.btn_New_Click);
             // 
             // textBoxKategorie
             // 
@@ -341,7 +366,7 @@
             this.btn_Chat.Name = "btn_Chat";
             this.btn_Chat.Size = new System.Drawing.Size(205, 46);
             this.btn_Chat.TabIndex = 19;
-            this.btn_Chat.Text = "Chat";
+            this.btn_Chat.Text = "Pinwand";
             this.btn_Chat.UseVisualStyleBackColor = true;
             this.btn_Chat.Click += new System.EventHandler(this.btn_Chat_Click);
             // 
@@ -356,16 +381,16 @@
             this.btn_UC_Übersicht.UseVisualStyleBackColor = true;
             this.btn_UC_Übersicht.Click += new System.EventHandler(this.btn_UC_Übersicht_Click);
             // 
-            // btn_New
+            // button4
             // 
-            this.btn_New.Location = new System.Drawing.Point(699, 14);
-            this.btn_New.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btn_New.Name = "btn_New";
-            this.btn_New.Size = new System.Drawing.Size(56, 46);
-            this.btn_New.TabIndex = 27;
-            this.btn_New.Text = "Neu";
-            this.btn_New.UseVisualStyleBackColor = true;
-            this.btn_New.Click += new System.EventHandler(this.btn_New_Click);
+            this.button4.Location = new System.Drawing.Point(657, 13);
+            this.button4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(205, 46);
+            this.button4.TabIndex = 22;
+            this.button4.Text = "History";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // Form1
             // 
@@ -373,6 +398,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.ClientSize = new System.Drawing.Size(1192, 720);
+            this.Controls.Add(this.button4);
             this.Controls.Add(this.btn_UC_Übersicht);
             this.Controls.Add(this.btn_Chat);
             this.Controls.Add(this.button7);
@@ -422,6 +448,8 @@
         private System.Windows.Forms.TextBox textBoxKategorie;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btn_New;
+        private System.Windows.Forms.Button btn_SystemNameNew;
+        private System.Windows.Forms.Button button4;
     }
 }
 

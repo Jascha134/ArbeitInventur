@@ -27,5 +27,4 @@ namespace ArbeitInventur
             File.WriteAllText(dateiPfad, json); // JSON-Inhalt in die Datei schreiben
         }
     }
-
 }
