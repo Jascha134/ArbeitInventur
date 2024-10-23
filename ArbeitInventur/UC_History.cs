@@ -12,77 +12,88 @@ namespace ArbeitInventur
 {
     public partial class UC_History : UserControl
     {
-        private LogHandler logger;
-        private List<LogHandler.LogEntry> logEntries;
-        private Benutzer benutzer;
+        private readonly LogHandler _logger;
+        private List<LogHandler.LogEntry> _logEntries;
+        private readonly Benutzer _benutzer;
 
         public UC_History(Benutzer benutzer)
         {
             InitializeComponent();
 
-            // Initialisiere den Logger und lade die Logs
-            logger = new LogHandler(Properties.Settings.Default.DataJSON + "\\log.json",benutzer);
-            logEntries = logger.LoadLogs();
+            _benutzer = benutzer;
+            _logger = new LogHandler(Properties.Settings.Default.DataJSON + "\\log.json", benutzer);
+            _logEntries = new List<LogHandler.LogEntry>();
 
-            // Event-Handler für das Ändern der Auswahl in listBoxTimestamp
-            listBoxTimestamp.SelectedIndexChanged += listBoxTimestamp_SelectedIndexChanged_1;
+            listBoxTimestamp.SelectedIndexChanged += ListBoxTimestamp_SelectedIndexChanged;
 
-            // ListBoxen befüllen
+            // Log-Einträge werden nun nur bei Bedarf geladen (Lazy Loading)
             LoadUniqueDates();
-            this.benutzer = benutzer;
+        }
+
+        // Methode zum Lazy Laden der Log-Einträge
+        private List<LogHandler.LogEntry> LoadLogEntriesIfNeeded()
+        {
+            if (_logEntries == null || !_logEntries.Any())
+            {
+                _logEntries = _logger.LoadLogs();
+            }
+            return _logEntries;
         }
 
         // Methode zum Laden der einzigartigen Datumsangaben in listBoxTimestamp
         private void LoadUniqueDates()
         {
-            // Leere die ListBoxen, um sicherzustellen, dass sie keine alten Daten enthalten
-            listBoxTimestamp.Items.Clear();
-            listBoxActions.Items.Clear();
+            ClearListBoxes();
 
-            // Gruppiere die Einträge nach Datum, um sicherzustellen, dass jedes Datum nur einmal angezeigt wird
-            var uniqueDates = logEntries
-                .Select(log => log.Timestamp.Date)  // Nur das Datum, ohne Uhrzeit
-                .Distinct()                         // Nur einzigartige Datumswerte
-                .OrderBy(date => date)              // Sortierung nach Datum
+            var uniqueDates = LoadLogEntriesIfNeeded()
+                .Select(log => log.Timestamp.Date)
+                .Distinct()
+                .OrderBy(date => date)
                 .ToList();
 
-            // Füge die einzigartigen Datumsangaben zur listBoxTimestamp hinzu
             foreach (var date in uniqueDates)
             {
-                string dateWithDay = $"{date:dddd, dd.MM.yyyy}"; // Beispiel: "Montag, 20.03.2023"
+                string dateWithDay = $"{date:dddd, dd.MM.yyyy}";
                 listBoxTimestamp.Items.Add(new ListBoxItem { Date = date, DisplayText = dateWithDay });
             }
         }
 
-        // Hilfsklasse zur Speicherung der ListBox-Items mit Datum und Anzeige-Text
+        // Methode zum Leeren der ListBoxen (DRY Prinzip)
+        private void ClearListBoxes()
+        {
+            listBoxTimestamp.Items.Clear();
+            listBoxActions.Items.Clear();
+        }
+
+        // Hilfsklasse zur Speicherung der ListBox-Items
         private class ListBoxItem
         {
             public DateTime Date { get; set; }
             public string DisplayText { get; set; }
 
-            // Wird verwendet, um den angezeigten Text in der ListBox darzustellen
-            public override string ToString()
-            {
-                return DisplayText;
-            }
+            public override string ToString() => DisplayText;
         }
-        // Event-Handler, wenn der Benutzer ein Datum in listBoxTimestamp auswählt
-        private void listBoxTimestamp_SelectedIndexChanged_1(object sender, EventArgs e)
+
+        // Event-Handler für Datumsauswahl
+        private void ListBoxTimestamp_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Überprüfen, ob ein gültiger Eintrag in der ListBox ausgewählt wurde
             if (listBoxTimestamp.SelectedItem is ListBoxItem selectedItem)
             {
-                DateTime selectedDate = selectedItem.Date;
+                UpdateActionsForDate(selectedItem.Date);
+            }
+        }
 
-                // Filtere die Log-Einträge nach dem ausgewählten Datum
-                var filteredEntries = logEntries.Where(log => log.Timestamp.Date == selectedDate).ToList();
+        // Aktualisiert die Actions-ListBox für das ausgewählte Datum
+        private void UpdateActionsForDate(DateTime selectedDate)
+        {
+            var filteredEntries = LoadLogEntriesIfNeeded()
+                .Where(log => log.Timestamp.Date == selectedDate)
+                .ToList();
 
-                // Aktualisiere die zweite ListBox mit den gefilterten Einträgen
-                listBoxActions.Items.Clear();
-                foreach (var log in filteredEntries)
-                {
-                    listBoxActions.Items.Add($"[{log.Timestamp:HH:mm}]" + " - " + $"{log.Benutzer.Name + ": "}" + log.Handlung);
-                }
+            listBoxActions.Items.Clear();
+            foreach (var log in filteredEntries)
+            {
+                listBoxActions.Items.Add($"[{log.Timestamp:HH:mm}] - {log.Benutzer.Name}: {log.Handlung}");
             }
         }
     }

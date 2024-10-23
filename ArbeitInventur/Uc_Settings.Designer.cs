@@ -42,6 +42,7 @@
             this.label1.Size = new System.Drawing.Size(90, 18);
             this.label1.TabIndex = 0;
             this.label1.Text = "DatenPath :";
+            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
             // txt_DataOrderJSON
             // 
@@ -50,6 +51,7 @@
             this.txt_DataOrderJSON.Name = "txt_DataOrderJSON";
             this.txt_DataOrderJSON.Size = new System.Drawing.Size(576, 26);
             this.txt_DataOrderJSON.TabIndex = 1;
+            this.txt_DataOrderJSON.TextChanged += new System.EventHandler(this.txt_DataOrderJSON_TextChanged);
             // 
             // button1
             // 

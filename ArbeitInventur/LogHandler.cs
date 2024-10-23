@@ -14,53 +14,13 @@ namespace ArbeitInventur
         private readonly string logFilePath;
         private readonly Benutzer Benutzer;
 
-        // Konstruktor zur Initialisierung des Log-Pfades
-        public LogHandler(string path,Benutzer benutzer)
+        public LogHandler(string path, Benutzer benutzer)
         {
             logFilePath = path;
             Benutzer = benutzer;
-            // Falls die Log-Datei noch nicht existiert, wird sie erstellt
             if (!File.Exists(logFilePath))
             {
                 File.Create(logFilePath).Close();
-            }
-        }
-
-        // Methode zum Protokollieren einer Handlung
-        public void LogAction(string handlung)
-        {
-            try
-            {
-                var logEntry = new LogEntry
-                {
-                    Timestamp = DateTime.Now,
-                    Handlung = handlung,
-                    Benutzer = Benutzer
-                    
-                };
-
-                List<LogEntry> logEntries;
-
-                // Wenn die Datei bereits Einträge enthält, diese laden
-                if (new FileInfo(logFilePath).Length > 0)
-                {
-                    string existingLogs = File.ReadAllText(logFilePath);
-                    logEntries = JsonConvert.DeserializeObject<List<LogEntry>>(existingLogs) ?? new List<LogEntry>();
-                }
-                else
-                {
-                    logEntries = new List<LogEntry>();
-                }
-
-                // Füge den neuen Eintrag hinzu und speichere ihn
-                logEntries.Add(logEntry);
-                string json = JsonConvert.SerializeObject(logEntries, Formatting.Indented);
-                File.WriteAllText(logFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                // Fehlermeldung, falls beim Protokollieren ein Fehler auftritt
-                MessageBox.Show("Fehler beim Protokollieren der Aktion: " + ex.Message);
             }
         }
 
@@ -83,7 +43,46 @@ namespace ArbeitInventur
             return new List<LogEntry>();
         }
 
-        // Öffentliche Hilfsklasse zur Definition der Log-Einträge
+        // Methode zum Protokollieren einer Handlung
+        public void LogAction(string actionDescription)
+        {
+            LogAction(new LogEntry
+            {
+                Timestamp = DateTime.Now,
+                Handlung = actionDescription,
+                Benutzer = Benutzer
+            });
+        }
+
+        // Überladene Methode zum Loggen mit zusätzlichen Informationen
+        public void LogAction(LogEntry logEntry)
+        {
+            try
+            {
+                List<LogEntry> logEntries;
+
+                if (new FileInfo(logFilePath).Length > 0)
+                {
+                    string existingLogs = File.ReadAllText(logFilePath);
+                    logEntries = JsonConvert.DeserializeObject<List<LogEntry>>(existingLogs) ?? new List<LogEntry>();
+                }
+                else
+                {
+                    logEntries = new List<LogEntry>();
+                }
+
+                // Füge den neuen Eintrag hinzu und speichere ihn
+                logEntries.Add(logEntry);
+                string json = JsonConvert.SerializeObject(logEntries, Formatting.Indented);
+                File.WriteAllText(logFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Fehler beim Protokollieren der Aktion: " + ex.Message);
+            }
+        }
+
+        // Klasse für die Log-Einträge
         public class LogEntry
         {
             public DateTime Timestamp { get; set; }

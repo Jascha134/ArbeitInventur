@@ -40,7 +40,6 @@
             this.listBoxTimestamp.Name = "listBoxTimestamp";
             this.listBoxTimestamp.Size = new System.Drawing.Size(259, 604);
             this.listBoxTimestamp.TabIndex = 0;
-            this.listBoxTimestamp.SelectedIndexChanged += new System.EventHandler(this.listBoxTimestamp_SelectedIndexChanged_1);
             // 
             // listBoxActions
             // 

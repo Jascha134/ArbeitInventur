@@ -34,5 +34,15 @@ namespace ArbeitInventur
                 Properties.Settings.Default.Save();
             }
         }
+
+        private void txt_DataOrderJSON_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

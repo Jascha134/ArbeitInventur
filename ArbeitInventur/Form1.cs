@@ -111,17 +111,43 @@ namespace ArbeitInventur
 
                             // Detail zur Liste der Details des ausgewählten Systems hinzufügen
                             selectedSystem.Details.Add(neuesDetail);
-                            logHandler.LogAction($"Hinzugefügt : {neuesDetail.Kategorie} {neuesDetail.Beschreibung} || Menge: {neuesDetail.Menge} || Mindestbestabd: {neuesDetail.Mindestbestand} ");
+                            logHandler.LogAction($"Hinzugefügt : {neuesDetail.Kategorie} {neuesDetail.Beschreibung} || Menge: {neuesDetail.Menge} || Mindestbestand: {neuesDetail.Mindestbestand} ");
                         }
                         else
                         {
+                            // Berechne die Veränderung der Menge
+                            int differenzMenge = menge - aktuellBearbeitetesDetail.Menge;
+
                             // Bearbeitung des ausgewählten Details (Bearbeiten)
                             aktuellBearbeitetesDetail.Kategorie = kategorie;
                             aktuellBearbeitetesDetail.Beschreibung = beschreibung;
                             aktuellBearbeitetesDetail.Menge = menge;
                             aktuellBearbeitetesDetail.Mindestbestand = mindestbestand;
 
-                            logHandler.LogAction($"Bearbeitet :{aktuellBearbeitetesDetail.Beschreibung} zu {benutzer}");
+                            // Log-Nachricht anpassen je nach Veränderung der Menge (Einlagerung oder Auslagerung)
+                            string logMessage;
+
+                            if (differenzMenge > 0)
+                            {
+                                logMessage = $"Eingelagert: {aktuellBearbeitetesDetail.Beschreibung} | " +
+                                             $"Eingelagerte Menge: {differenzMenge} | " +
+                                             $"Neuer Bestand: {aktuellBearbeitetesDetail.Menge} | " ;
+                            }
+                            else if (differenzMenge < 0)
+                            {
+                                logMessage = $"Ausgelagert: {aktuellBearbeitetesDetail.Beschreibung} | " +
+                                             $"Ausgelagerte Menge: {-differenzMenge} | " + // Differenz als positive Zahl anzeigen
+                                             $"Verbleibender Bestand: {aktuellBearbeitetesDetail.Menge} | ";
+                            }
+                            else
+                            {
+                                logMessage = $"Bearbeitet: {aktuellBearbeitetesDetail.Beschreibung} | " +
+                                             $"Kategorie: {aktuellBearbeitetesDetail.Kategorie} | " +
+                                             $"Keine Mengenänderung | " +
+                                             $"Bestand: {aktuellBearbeitetesDetail.Menge} | ";
+                            }
+
+                            logHandler.LogAction(logMessage);
 
                             // Nach der Bearbeitung aufheben
                             aktuellBearbeitetesDetail = null;
@@ -186,22 +212,25 @@ namespace ArbeitInventur
         {
             try
             {
-                logHandler = new LogHandler(logg, benutzer);
-                // Eingabe für den Systemnamen sammeln
-                string systemName = textBoxSystemName.Text;
+                // Initialisiere den LogHandler, falls er noch nicht gesetzt wurde
+                if (logHandler == null)
+                {
+                    logHandler = new LogHandler(logg, benutzer);
+                }
 
-                // Überprüfen, ob der Systemname leer ist
+                // Eingabe für den Systemnamen sammeln und validieren
+                string systemName = textBoxSystemName.Text.Trim();
                 if (string.IsNullOrWhiteSpace(systemName))
                 {
-                    MessageBox.Show("Bitte geben Sie einen gültigen Systemnamen ein.");
+                    MessageBox.Show("Bitte geben Sie einen gültigen Systemnamen ein.", "Ungültiger Systemname", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
+                // Prüfen, ob wir ein neues System hinzufügen oder ein bestehendes bearbeiten
                 if (aktuellBearbeitetesSystem == null)
                 {
                     // Neues System erstellen (Hinzufügen)
-                    // SystemID automatisch generieren: Maximal bestehende SystemID + 1
-                    int newSystemID = implantatsysteme.Any() ? implantatsysteme.Max(system => system.SystemID) + 1 : 1;
+                    int newSystemID = GeneriereNeueSystemID();
 
                     var neuesSystem = new ImplantatSystem
                     {
@@ -212,38 +241,67 @@ namespace ArbeitInventur
 
                     // Neues System zur Liste der Implantatsysteme hinzufügen
                     implantatsysteme.Add(neuesSystem);
-                    logHandler.LogAction(neuesSystem.SystemName + ": wurde zur liste hinzugefügt ");
+
+                    // Log-Nachricht für das Hinzufügen
+                    logHandler.LogAction($"{neuesSystem.SystemName} wurde zur Liste hinzugefügt (SystemID: {neuesSystem.SystemID})");
                 }
                 else
                 {
-                    string backup = aktuellBearbeitetesSystem.SystemName;
-                    // System bearbeiten
+                    // Vorherigen Systemnamen speichern, um die Änderung zu protokollieren
+                    string alterSystemName = aktuellBearbeitetesSystem.SystemName;
+
+                    // Systemname aktualisieren
                     aktuellBearbeitetesSystem.SystemName = systemName;
+
+                    // Log-Nachricht für die Änderung
+                    logHandler.LogAction($"Systemname geändert: {alterSystemName} wurde zu {systemName}");
 
                     // Bearbeitung aufheben
                     aktuellBearbeitetesSystem = null;
-
-                    logHandler.LogAction($"Firmen / Hersteller - {backup} wurde zu {systemName} geändert");
                 }
 
-                // Änderungen speichern
-                manager.SpeichereImplantatsysteme(implantatsysteme);
-
-                // DataGridView für Implantatsysteme aktualisieren
-                dataGridView1.DataSource = null;
-                dataGridView1.DataSource = implantatsysteme.Select(system => new
-                {
-                    system.SystemName // Die SystemID wird hier nicht mehr angezeigt
-                }).ToList();
+                // Änderungen speichern und UI aktualisieren
+                SpeichereUndAktualisiereUI();
 
                 // Eingabefelder leeren
-                textBoxSystemName.Clear();
+                LeereEingabefelder();
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("Ungültiges Format eingegeben. Bitte überprüfen Sie die Eingabewerte.", "Formatfehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ein Fehler ist aufgetreten: " + ex.Message);
+                MessageBox.Show($"Ein unerwarteter Fehler ist aufgetreten: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        // Methode zum Generieren einer neuen SystemID
+        private int GeneriereNeueSystemID()
+        {
+            return implantatsysteme.Any() ? implantatsysteme.Max(system => system.SystemID) + 1 : 1;
+        }
+
+        // Methode zum Speichern und Aktualisieren der DataGridView
+        private void SpeichereUndAktualisiereUI()
+        {
+            // Änderungen speichern
+            manager.SpeichereImplantatsysteme(implantatsysteme);
+
+            // DataGridView für Implantatsysteme aktualisieren
+            dataGridView1.DataSource = null;
+            dataGridView1.DataSource = implantatsysteme.Select(system => new
+            {
+                system.SystemName // SystemID wird hier nicht angezeigt
+            }).ToList();
+        }
+
+        // Methode zum Leeren der Eingabefelder
+        private void LeereEingabefelder()
+        {
+            textBoxSystemName.Clear();
+        }
+
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             // Überprüfen, ob eine gültige Zeile ausgewählt wurde
