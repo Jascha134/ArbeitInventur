@@ -1,30 +1,58 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
 
 namespace ArbeitInventur
 {
-    public class ProkuktManager
+    public class ProduktManager
     {
-        private string dateiPfad = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Der Pfad zur JSON-Datei
+        private readonly string dateiPfad;
 
-        // Implantatsysteme aus der JSON-Datei laden
-        public List<ProduktFirma> LadeImplantatsysteme()
+        // Konstruktor mit Standard- oder benutzerdefiniertem Pfad
+        public ProduktManager(string pfad = null)
         {
-            if (File.Exists(dateiPfad)) // Prüfen, ob die Datei existiert
+            dateiPfad = pfad ?? Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Standardpfad
+        }
+
+        // Generische Methode zum Laden von Daten aus einer JSON-Datei
+        public List<T> LadeDaten<T>()
+        {
+            if (File.Exists(dateiPfad))
             {
-                string json = File.ReadAllText(dateiPfad); // JSON-Inhalt lesen
-                return JsonConvert.DeserializeObject<List<ProduktFirma>>(json); // In Liste von Implantatsystemen umwandeln
+                try
+                {
+                    string json = File.ReadAllText(dateiPfad);
+                    return JsonConvert.DeserializeObject<List<T>>(json) ?? new List<T>(); // Leere Liste als Fallback
+                }
+                catch (Exception ex)
+                {
+                    // Fehlerprotokollierung (Falls gewünscht)
+                    Console.WriteLine($"Fehler beim Laden der Daten: {ex.Message}");
+                    return new List<T>(); // Leere Liste bei Fehlern
+                }
             }
-            return new List<ProduktFirma>(); // Leere Liste zurückgeben, wenn Datei nicht existiert
+            return new List<T>(); // Leere Liste, falls Datei fehlt
         }
 
-        // Implantatsysteme in der JSON-Datei speichern
-        public void SpeichereImplantatsysteme(List<ProduktFirma> implantatsysteme)
+        // Generische Methode zum Speichern von Daten in einer JSON-Datei
+        public void SpeichereDaten<T>(List<T> daten)
         {
-            string json = JsonConvert.SerializeObject(implantatsysteme,Newtonsoft.Json.Formatting.Indented); // Implantatsysteme in JSON-Format umwandeln
-            File.WriteAllText(dateiPfad, json); // JSON-Inhalt in die Datei schreiben
+            try
+            {
+                string json = JsonConvert.SerializeObject(daten, Formatting.Indented);
+                File.WriteAllText(dateiPfad, json);
+            }
+            catch (Exception ex)
+            {
+                // Fehlerprotokollierung (Falls gewünscht)
+                Console.WriteLine($"Fehler beim Speichern der Daten: {ex.Message}");
+            }
         }
+
+        // Beispielmethoden für spezifische Typen
+        public List<ProduktFirma> LadeImplantatsysteme() => LadeDaten<ProduktFirma>();
+
+        public void SpeichereImplantatsysteme(List<ProduktFirma> implantatsysteme) => SpeichereDaten(implantatsysteme);
     }
 }

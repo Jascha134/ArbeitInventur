@@ -16,7 +16,7 @@ namespace ArbeitInventur
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Benutzerauswachl());
+            Application.Run(new Login());
         }
     }
 }

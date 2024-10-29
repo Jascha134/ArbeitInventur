@@ -7,16 +7,16 @@ namespace ArbeitInventur
     using System.Timers;
     using System.Windows.Forms;
 
-    public partial class Form2 : Form
+    public partial class Übersicht : Form
     {
-        private ProkuktManager manager;
+        private ProduktManager manager;
         private List<ProduktFirma> implantatsysteme;
         private JsonDateiÜberwacher jsonÜberwacher;
         private string jsonDateiPfad = Properties.Settings.Default.DataJSON+ "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private System.Timers.Timer debounceTimer;
-        public static Form2 instanze;
+        public static Übersicht instanze;
 
-        public Form2(List<ProduktFirma> vorabGeladeneDaten)
+        public Übersicht(List<ProduktFirma> vorabGeladeneDaten)
         {
             InitializeComponent();
 
@@ -24,7 +24,7 @@ namespace ArbeitInventur
             instanze = this;
             DGVStyle.Dgv(dataGridViewOverview);
             // Instanz von ImplantatManager erstellen
-            manager = new ProkuktManager();
+            manager = new ProduktManager();
             // Instanz von JsonDateiÜberwacher erstellen
             jsonÜberwacher = new JsonDateiÜberwacher(jsonDateiPfad);
             jsonÜberwacher.DateiGeändert += JsonDateiWurdeGeändert;

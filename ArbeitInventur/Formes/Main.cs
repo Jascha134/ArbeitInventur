@@ -7,21 +7,20 @@ using System.Windows.Forms;
 
 namespace ArbeitInventur
 {
-    public partial class Form1 : Form
+    public partial class Main : Form
     {
         private string implantatsystem = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private string logg = Properties.Settings.Default.DataJSON + "\\log.json";
-
-        private ProkuktManager manager = new ProkuktManager();
+        private ProduktManager manager = new ProduktManager();
         private List<ProduktFirma> implantatsysteme = new List<ProduktFirma>();
         private Benutzer benutzer;
         private LogHandler logHandler;
 
-        public Form1(Benutzer benutzer)
+        public Main(Benutzer benutzer)
         {
             InitializeComponent();
             this.benutzer = benutzer;
-            Benutzerauswachl.Instance.Hide();
+            Login.Instance.Hide();
             DGVSettings();
             originalControls = panel1.Controls.Cast<Control>().ToArray();
             this.MinimumSize = new Size(1208, 759);
@@ -562,17 +561,17 @@ namespace ArbeitInventur
         private void btn_UC_Übersicht_Click(object sender, EventArgs e)
         {
             // Prüfen, ob Form2 bereits geöffnet ist
-            if (Form2.instanze == null || Form2.instanze.IsDisposed)
+            if (Übersicht.instanze == null || Übersicht.instanze.IsDisposed)
             {
 
-                Form2.instanze = new Form2(implantatsysteme);
-                Form2.instanze.FormClosed += (s, args) => Form2.instanze = null; // Setzt die Instanz auf null, wenn Form2 geschlossen wird
-                Form2.instanze.Show();
+                Übersicht.instanze = new Übersicht(implantatsysteme);
+                Übersicht.instanze.FormClosed += (s, args) => Übersicht.instanze = null; // Setzt die Instanz auf null, wenn Form2 geschlossen wird
+                Übersicht.instanze.Show();
             }
             else
             {
                 // Wenn Form2 bereits geöffnet ist, bringe es in den Vordergrund
-                Form2.instanze.BringToFront();
+                Übersicht.instanze.BringToFront();
             }
         }
         private void btn_New_Click(object sender, EventArgs e)

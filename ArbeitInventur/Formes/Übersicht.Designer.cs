@@ -1,6 +1,6 @@
 ﻿namespace ArbeitInventur
 {
-    partial class Form2
+    partial class Übersicht
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Übersicht));
             this.dataGridViewOverview = new System.Windows.Forms.DataGridView();
             this.textBoxSuche = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();

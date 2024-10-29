@@ -32,6 +32,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Icon_Inventura.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -49,25 +52,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UserInterface\Benutzer.cs" />
-    <Compile Include="Formes\Benutzerauswachl.cs">
+    <Compile Include="Formes\Registrierung.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formes\Benutzerauswachl.Designer.cs">
-      <DependentUpon>Benutzerauswachl.cs</DependentUpon>
+    <Compile Include="Formes\Registrierung.Designer.cs">
+      <DependentUpon>Registrierung.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserInterface\Benutzer.cs" />
+    <Compile Include="Formes\Login.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\Login.Designer.cs">
+      <DependentUpon>Login.cs</DependentUpon>
     </Compile>
     <Compile Include="DGVStyle.cs" />
-    <Compile Include="Formes\Form1.cs">
+    <Compile Include="Formes\Main.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formes\Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Formes\Main.Designer.cs">
+      <DependentUpon>Main.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formes\Form2.cs">
+    <Compile Include="Formes\Übersicht.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formes\Form2.Designer.cs">
-      <DependentUpon>Form2.cs</DependentUpon>
+    <Compile Include="Formes\Übersicht.Designer.cs">
+      <DependentUpon>Übersicht.cs</DependentUpon>
     </Compile>
     <Compile Include="UC_History.cs">
       <SubType>UserControl</SubType>
@@ -94,14 +103,19 @@
     <Compile Include="Uc_Settings.Designer.cs">
       <DependentUpon>Uc_Settings.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Formes\Benutzerauswachl.resx">
-      <DependentUpon>Benutzerauswachl.cs</DependentUpon>
+    <Compile Include="UserInterface\BenutzerVerwaltung.cs" />
+    <Compile Include="UserInterface\PasswortHashing.cs" />
+    <EmbeddedResource Include="Formes\Login.resx">
+      <DependentUpon>Login.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formes\Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="Formes\Main.resx">
+      <DependentUpon>Main.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Formes\Form2.resx">
-      <DependentUpon>Form2.cs</DependentUpon>
+    <EmbeddedResource Include="Formes\Registrierung.resx">
+      <DependentUpon>Registrierung.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formes\Übersicht.resx">
+      <DependentUpon>Übersicht.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UC_History.resx">
       <DependentUpon>UC_History.cs</DependentUpon>
@@ -135,6 +149,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon_Inventura.ico" />
+    <Content Include="JPG_Inventura.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
