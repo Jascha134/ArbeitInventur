@@ -12,6 +12,8 @@ namespace ArbeitInventur
         private string implantatsystem = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private string logg = Properties.Settings.Default.DataJSON + "\\log.json";
 
+        private ProkuktManager manager = new ProkuktManager();
+        private List<ProduktFirma> implantatsysteme = new List<ProduktFirma>();
         private Benutzer benutzer;
         private LogHandler logHandler;
 
@@ -31,9 +33,6 @@ namespace ArbeitInventur
             DGVStyle.Dgv(dataGridView1);
             DGVStyle.Dgv(dataGridView2);
         }
-
-        private ImplantatManager manager = new ImplantatManager();
-        private List<ImplantatSystem> implantatsysteme = new List<ImplantatSystem>();
         private void Form1_Load(object sender, EventArgs e)
         {
             lb_Benutzer.Text = "Benutzer : " + benutzer.Name;
@@ -69,7 +68,7 @@ namespace ArbeitInventur
                 }
             }
         }
-        private ImplantatSystemDetails aktuellBearbeitetesDetail = null; // Speichert das Detail, das bearbeitet wird
+        private ProduktFirmaProdukte aktuellBearbeitetesDetail = null; // Speichert das Detail, das bearbeitet wird
         private void button1_Click(object sender, EventArgs e)
         {
             if (dataGridView1.CurrentRow != null)
@@ -101,7 +100,7 @@ namespace ArbeitInventur
                         if (aktuellBearbeitetesDetail == null)
                         {
                             // Neues Detail für das Implantatsystem erstellen (Hinzufügen)
-                            var neuesDetail = new ImplantatSystemDetails
+                            var neuesDetail = new ProduktFirmaProdukte
                             {
                                 Kategorie = kategorie,
                                 Beschreibung = beschreibung,
@@ -207,7 +206,7 @@ namespace ArbeitInventur
                 }
             }
         }
-        private ImplantatSystem aktuellBearbeitetesSystem = null; // Speichert das System, das bearbeitet wird
+        private ProduktFirma aktuellBearbeitetesSystem = null; // Speichert das System, das bearbeitet wird
         private void button2_Click(object sender, EventArgs e)
         {
             try
@@ -232,11 +231,11 @@ namespace ArbeitInventur
                     // Neues System erstellen (Hinzufügen)
                     int newSystemID = GeneriereNeueSystemID();
 
-                    var neuesSystem = new ImplantatSystem
+                    var neuesSystem = new ProduktFirma
                     {
                         SystemID = newSystemID,
                         SystemName = systemName,
-                        Details = new List<ImplantatSystemDetails>() // Leere Liste für Details
+                        Details = new List<ProduktFirmaProdukte>() // Leere Liste für Details
                     };
 
                     // Neues System zur Liste der Implantatsysteme hinzufügen
@@ -275,19 +274,16 @@ namespace ArbeitInventur
                 MessageBox.Show($"Ein unerwarteter Fehler ist aufgetreten: {ex.Message}", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         // Methode zum Generieren einer neuen SystemID
         private int GeneriereNeueSystemID()
         {
             return implantatsysteme.Any() ? implantatsysteme.Max(system => system.SystemID) + 1 : 1;
         }
-
         // Methode zum Speichern und Aktualisieren der DataGridView
         private void SpeichereUndAktualisiereUI()
         {
             // Änderungen speichern
             manager.SpeichereImplantatsysteme(implantatsysteme);
-
             // DataGridView für Implantatsysteme aktualisieren
             dataGridView1.DataSource = null;
             dataGridView1.DataSource = implantatsysteme.Select(system => new
@@ -295,13 +291,11 @@ namespace ArbeitInventur
                 system.SystemName // SystemID wird hier nicht angezeigt
             }).ToList();
         }
-
         // Methode zum Leeren der Eingabefelder
         private void LeereEingabefelder()
         {
             textBoxSystemName.Clear();
         }
-
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             // Überprüfen, ob eine gültige Zeile ausgewählt wurde
@@ -570,7 +564,8 @@ namespace ArbeitInventur
             // Prüfen, ob Form2 bereits geöffnet ist
             if (Form2.instanze == null || Form2.instanze.IsDisposed)
             {
-                Form2.instanze = new Form2();
+
+                Form2.instanze = new Form2(implantatsysteme);
                 Form2.instanze.FormClosed += (s, args) => Form2.instanze = null; // Setzt die Instanz auf null, wenn Form2 geschlossen wird
                 Form2.instanze.Show();
             }
@@ -587,13 +582,11 @@ namespace ArbeitInventur
             textBoxMenge.Clear();
             textBoxMindestbestand.Clear();
         }
-
         private void btn_SystemNameNew_Click(object sender, EventArgs e)
         {
             aktuellBearbeitetesSystem = null;
             textBoxSystemName.Clear();
         }
-
         private void button4_Click(object sender, EventArgs e)
         {
             UC_History uC_Chatcs = new UC_History(benutzer);

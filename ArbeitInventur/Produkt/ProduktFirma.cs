@@ -8,7 +8,7 @@ namespace ArbeitInventur
 {
     using System.Collections.Generic;
 
-    public class ImplantatSystem
+    public class ProduktFirma
     {
         // Eindeutige ID für jedes Implantatsystem
         public int SystemID { get; set; }
@@ -17,7 +17,7 @@ namespace ArbeitInventur
         public string SystemName { get; set; }
 
         // Eine Liste von Details für dieses System
-        public List<ImplantatSystemDetails> Details { get; set; }
+        public List<ProduktFirmaProdukte> Details { get; set; }
     }
 
 }

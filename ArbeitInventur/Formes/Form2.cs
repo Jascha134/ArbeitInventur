@@ -9,27 +9,25 @@ namespace ArbeitInventur
 
     public partial class Form2 : Form
     {
-        private ImplantatManager manager;
-        private List<ImplantatSystem> implantatsysteme;
+        private ProkuktManager manager;
+        private List<ProduktFirma> implantatsysteme;
         private JsonDateiÜberwacher jsonÜberwacher;
         private string jsonDateiPfad = Properties.Settings.Default.DataJSON+ "\\implantatsysteme.json"; // Pfad zur JSON-Datei auf dem Server
         private System.Timers.Timer debounceTimer;
         public static Form2 instanze;
 
-        public Form2()
+        public Form2(List<ProduktFirma> vorabGeladeneDaten)
         {
             InitializeComponent();
 
+            implantatsysteme = vorabGeladeneDaten;
             instanze = this;
             DGVStyle.Dgv(dataGridViewOverview);
-
             // Instanz von ImplantatManager erstellen
-            manager = new ImplantatManager();
-
+            manager = new ProkuktManager();
             // Instanz von JsonDateiÜberwacher erstellen
             jsonÜberwacher = new JsonDateiÜberwacher(jsonDateiPfad);
             jsonÜberwacher.DateiGeändert += JsonDateiWurdeGeändert;
-
             // Timer initialisieren
             debounceTimer = new System.Timers.Timer(500); // 500 ms Verzögerung
             debounceTimer.AutoReset = false;
@@ -42,15 +40,14 @@ namespace ArbeitInventur
         {
             // Überwachung starten, wenn das Formular geladen wird
             jsonÜberwacher.StartÜberwachung();
-
-            // Initiale Daten laden, wenn das Fenster vollständig erstellt ist
-            DatenLadenUndAnzeigen();
+            ÜbersichtLaden();
         }
 
         private void Form2_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Überwachung stoppen, wenn das Formular geschlossen wird
             jsonÜberwacher.StopÜberwachung();
+
         }
 
         private void JsonDateiWurdeGeändert()

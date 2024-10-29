@@ -5,23 +5,23 @@ using System.Xml;
 
 namespace ArbeitInventur
 {
-    public class ImplantatManager
+    public class ProkuktManager
     {
         private string dateiPfad = Properties.Settings.Default.DataJSON + "\\implantatsysteme.json"; // Der Pfad zur JSON-Datei
 
         // Implantatsysteme aus der JSON-Datei laden
-        public List<ImplantatSystem> LadeImplantatsysteme()
+        public List<ProduktFirma> LadeImplantatsysteme()
         {
             if (File.Exists(dateiPfad)) // Prüfen, ob die Datei existiert
             {
                 string json = File.ReadAllText(dateiPfad); // JSON-Inhalt lesen
-                return JsonConvert.DeserializeObject<List<ImplantatSystem>>(json); // In Liste von Implantatsystemen umwandeln
+                return JsonConvert.DeserializeObject<List<ProduktFirma>>(json); // In Liste von Implantatsystemen umwandeln
             }
-            return new List<ImplantatSystem>(); // Leere Liste zurückgeben, wenn Datei nicht existiert
+            return new List<ProduktFirma>(); // Leere Liste zurückgeben, wenn Datei nicht existiert
         }
 
         // Implantatsysteme in der JSON-Datei speichern
-        public void SpeichereImplantatsysteme(List<ImplantatSystem> implantatsysteme)
+        public void SpeichereImplantatsysteme(List<ProduktFirma> implantatsysteme)
         {
             string json = JsonConvert.SerializeObject(implantatsysteme,Newtonsoft.Json.Formatting.Indented); // Implantatsysteme in JSON-Format umwandeln
             File.WriteAllText(dateiPfad, json); // JSON-Inhalt in die Datei schreiben

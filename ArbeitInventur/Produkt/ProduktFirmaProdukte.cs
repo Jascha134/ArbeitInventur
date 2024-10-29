@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ArbeitInventur
 {
-    public class ImplantatSystemDetails
+    public class ProduktFirmaProdukte
     {
         public string Kategorie { get; set; } // Neue Eigenschaft zur Kategorisierung, steht jetzt vor Name
         public string Beschreibung { get; set; }

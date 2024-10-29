@@ -49,36 +49,35 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Benutzer.cs" />
-    <Compile Include="Benutzerauswachl.cs">
+    <Compile Include="UserInterface\Benutzer.cs" />
+    <Compile Include="Formes\Benutzerauswachl.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Benutzerauswachl.Designer.cs">
+    <Compile Include="Formes\Benutzerauswachl.Designer.cs">
       <DependentUpon>Benutzerauswachl.cs</DependentUpon>
     </Compile>
     <Compile Include="DGVStyle.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Formes\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
+    <Compile Include="Formes\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form2.cs">
+    <Compile Include="Formes\Form2.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form2.Designer.cs">
+    <Compile Include="Formes\Form2.Designer.cs">
       <DependentUpon>Form2.cs</DependentUpon>
     </Compile>
-    <Compile Include="StartLoadProcces.cs" />
     <Compile Include="UC_History.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UC_History.Designer.cs">
       <DependentUpon>UC_History.cs</DependentUpon>
     </Compile>
-    <Compile Include="ImplantatManager.cs" />
-    <Compile Include="ImplantatSystem.cs" />
-    <Compile Include="ImplantatSystemDetails.cs" />
+    <Compile Include="Produkt\ProkuktManager.cs" />
+    <Compile Include="Produkt\ProduktFirma.cs" />
+    <Compile Include="Produkt\ProduktFirmaProdukte.cs" />
     <Compile Include="JsonDateiÜberwacher.cs" />
     <Compile Include="LogHandler.cs" />
     <Compile Include="Program.cs" />
@@ -95,13 +94,13 @@
     <Compile Include="Uc_Settings.Designer.cs">
       <DependentUpon>Uc_Settings.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Benutzerauswachl.resx">
+    <EmbeddedResource Include="Formes\Benutzerauswachl.resx">
       <DependentUpon>Benutzerauswachl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
+    <EmbeddedResource Include="Formes\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form2.resx">
+    <EmbeddedResource Include="Formes\Form2.resx">
       <DependentUpon>Form2.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UC_History.resx">
