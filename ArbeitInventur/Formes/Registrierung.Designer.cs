@@ -63,6 +63,7 @@
             this.btnRegistrieren.TabIndex = 24;
             this.btnRegistrieren.Text = "Benutzer anlegen";
             this.btnRegistrieren.UseVisualStyleBackColor = true;
+            this.btnRegistrieren.Click += new System.EventHandler(this.btnRegistrieren_Click);
             // 
             // pictureBox1
             // 

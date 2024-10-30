@@ -57,6 +57,7 @@
             this.btnRegistrieren.TabIndex = 15;
             this.btnRegistrieren.Text = "Registrieren";
             this.btnRegistrieren.UseVisualStyleBackColor = true;
+            this.btnRegistrieren.Click += new System.EventHandler(this.btnRegistrieren_Click);
             // 
             // btnLogin
             // 
@@ -127,6 +128,7 @@
             this.Name = "Login";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Login";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Login_KeyDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

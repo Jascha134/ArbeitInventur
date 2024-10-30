@@ -2,12 +2,8 @@
 using ArbeitInventur.UserInterface;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace ArbeitInventur
@@ -26,6 +22,9 @@ namespace ArbeitInventur
             errorTimer = new Timer();
             errorTimer.Interval = 1500; // 2 Sekunden (2000 Millisekunden)
             errorTimer.Tick += ErrorTimer_Tick;
+
+            this.KeyPreview = true;
+            this.KeyDown += new KeyEventHandler(Login_KeyDown);
 
             benutzerVerwaltung = new BenutzerVerwaltung();
             benutzerVerwaltung.DatenLaden();
@@ -132,6 +131,26 @@ namespace ArbeitInventur
                 }
             }
             return false; // Benutzername oder Passwort war falsch
+        }
+
+        private void btnRegistrieren_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            Registrierung registrierungsForm = new Registrierung();
+            registrierungsForm.ShowDialog();
+        }
+
+        private void Login_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Überprüfen, ob die Enter-Taste gedrückt wurde
+            if (e.KeyCode == Keys.Enter)
+            {
+                // Das Click-Ereignis für den Button auslösen
+                btnLogin.PerformClick();
+
+                // Optional: Event als verarbeitet markieren
+                e.Handled = true;
+            }
         }
     }
 }
