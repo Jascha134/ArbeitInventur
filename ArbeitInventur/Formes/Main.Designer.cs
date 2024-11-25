@@ -43,7 +43,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.buttonSystemDelete = new System.Windows.Forms.Button();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.panelMain = new System.Windows.Forms.Panel();
             this.btn_SystemNameNew = new System.Windows.Forms.Button();
             this.btn_New = new System.Windows.Forms.Button();
             this.textBoxKategorie = new System.Windows.Forms.TextBox();
@@ -58,16 +58,16 @@
             this.btn_Chat = new System.Windows.Forms.Button();
             this.btn_UC_Übersicht = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
+            this.btn_Exocad = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
-            this.panel1.SuspendLayout();
+            this.panelMain.SuspendLayout();
             this.SuspendLayout();
             // 
             // dataGridView1
             // 
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(6, 216);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -79,7 +79,8 @@
             // 
             // dataGridView2
             // 
-            this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView2.Location = new System.Drawing.Point(333, 216);
@@ -206,39 +207,39 @@
             this.buttonSystemDelete.UseVisualStyleBackColor = true;
             this.buttonSystemDelete.Click += new System.EventHandler(this.button5_Click);
             // 
-            // panel1
+            // panelMain
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.panelMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.btn_SystemNameNew);
-            this.panel1.Controls.Add(this.btn_New);
-            this.panel1.Controls.Add(this.textBoxKategorie);
-            this.panel1.Controls.Add(this.label5);
-            this.panel1.Controls.Add(this.btn_PlusMindest);
-            this.panel1.Controls.Add(this.btn_MinusMindes);
-            this.panel1.Controls.Add(this.btn_Plus);
-            this.panel1.Controls.Add(this.btn_Minus);
-            this.panel1.Controls.Add(this.lb_Benutzer);
-            this.panel1.Controls.Add(this.dataGridView1);
-            this.panel1.Controls.Add(this.textBoxMenge);
-            this.panel1.Controls.Add(this.buttonSystemDelete);
-            this.panel1.Controls.Add(this.label1);
-            this.panel1.Controls.Add(this.textBoxMindestbestand);
-            this.panel1.Controls.Add(this.dataGridView2);
-            this.panel1.Controls.Add(this.textBoxBeschreibung);
-            this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.button2);
-            this.panel1.Controls.Add(this.label4);
-            this.panel1.Controls.Add(this.label3);
-            this.panel1.Controls.Add(this.textBoxSystemName);
-            this.panel1.Controls.Add(this.button3);
-            this.panel1.Controls.Add(this.button1);
-            this.panel1.Location = new System.Drawing.Point(18, 69);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1155, 623);
-            this.panel1.TabIndex = 16;
+            this.panelMain.Controls.Add(this.btn_SystemNameNew);
+            this.panelMain.Controls.Add(this.btn_New);
+            this.panelMain.Controls.Add(this.textBoxKategorie);
+            this.panelMain.Controls.Add(this.label5);
+            this.panelMain.Controls.Add(this.btn_PlusMindest);
+            this.panelMain.Controls.Add(this.btn_MinusMindes);
+            this.panelMain.Controls.Add(this.btn_Plus);
+            this.panelMain.Controls.Add(this.btn_Minus);
+            this.panelMain.Controls.Add(this.lb_Benutzer);
+            this.panelMain.Controls.Add(this.dataGridView1);
+            this.panelMain.Controls.Add(this.textBoxMenge);
+            this.panelMain.Controls.Add(this.buttonSystemDelete);
+            this.panelMain.Controls.Add(this.label1);
+            this.panelMain.Controls.Add(this.textBoxMindestbestand);
+            this.panelMain.Controls.Add(this.dataGridView2);
+            this.panelMain.Controls.Add(this.textBoxBeschreibung);
+            this.panelMain.Controls.Add(this.label2);
+            this.panelMain.Controls.Add(this.button2);
+            this.panelMain.Controls.Add(this.label4);
+            this.panelMain.Controls.Add(this.label3);
+            this.panelMain.Controls.Add(this.textBoxSystemName);
+            this.panelMain.Controls.Add(this.button3);
+            this.panelMain.Controls.Add(this.button1);
+            this.panelMain.Location = new System.Drawing.Point(18, 69);
+            this.panelMain.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.panelMain.Name = "panelMain";
+            this.panelMain.Size = new System.Drawing.Size(1155, 623);
+            this.panelMain.TabIndex = 16;
             // 
             // btn_SystemNameNew
             // 
@@ -340,10 +341,10 @@
             // button6
             // 
             this.button6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button6.Location = new System.Drawing.Point(874, 14);
+            this.button6.Location = new System.Drawing.Point(1038, 14);
             this.button6.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(300, 46);
+            this.button6.Size = new System.Drawing.Size(135, 46);
             this.button6.TabIndex = 17;
             this.button6.Text = "Einstellungen";
             this.button6.UseVisualStyleBackColor = true;
@@ -354,7 +355,7 @@
             this.button7.Location = new System.Drawing.Point(18, 14);
             this.button7.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(205, 46);
+            this.button7.Size = new System.Drawing.Size(135, 46);
             this.button7.TabIndex = 18;
             this.button7.Text = "Einlagern";
             this.button7.UseVisualStyleBackColor = true;
@@ -362,10 +363,10 @@
             // 
             // btn_Chat
             // 
-            this.btn_Chat.Location = new System.Drawing.Point(444, 13);
+            this.btn_Chat.Location = new System.Drawing.Point(304, 14);
             this.btn_Chat.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btn_Chat.Name = "btn_Chat";
-            this.btn_Chat.Size = new System.Drawing.Size(205, 46);
+            this.btn_Chat.Size = new System.Drawing.Size(135, 46);
             this.btn_Chat.TabIndex = 19;
             this.btn_Chat.Text = "Pinwand";
             this.btn_Chat.UseVisualStyleBackColor = true;
@@ -373,10 +374,10 @@
             // 
             // btn_UC_Übersicht
             // 
-            this.btn_UC_Übersicht.Location = new System.Drawing.Point(231, 14);
+            this.btn_UC_Übersicht.Location = new System.Drawing.Point(161, 13);
             this.btn_UC_Übersicht.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btn_UC_Übersicht.Name = "btn_UC_Übersicht";
-            this.btn_UC_Übersicht.Size = new System.Drawing.Size(205, 46);
+            this.btn_UC_Übersicht.Size = new System.Drawing.Size(135, 46);
             this.btn_UC_Übersicht.TabIndex = 21;
             this.btn_UC_Übersicht.Text = "Übersicht";
             this.btn_UC_Übersicht.UseVisualStyleBackColor = true;
@@ -384,39 +385,51 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(657, 13);
+            this.button4.Location = new System.Drawing.Point(447, 14);
             this.button4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(205, 46);
+            this.button4.Size = new System.Drawing.Size(135, 46);
             this.button4.TabIndex = 22;
             this.button4.Text = "History";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
-            // Form1
+            // btn_Exocad
+            // 
+            this.btn_Exocad.Location = new System.Drawing.Point(590, 14);
+            this.btn_Exocad.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btn_Exocad.Name = "btn_Exocad";
+            this.btn_Exocad.Size = new System.Drawing.Size(135, 46);
+            this.btn_Exocad.TabIndex = 23;
+            this.btn_Exocad.Text = "Exocad";
+            this.btn_Exocad.UseVisualStyleBackColor = true;
+            this.btn_Exocad.Click += new System.EventHandler(this.btn_Exocad_Click);
+            // 
+            // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.ClientSize = new System.Drawing.Size(1192, 720);
+            this.Controls.Add(this.btn_Exocad);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.btn_UC_Übersicht);
             this.Controls.Add(this.btn_Chat);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.panelMain);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "Form1";
+            this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "ArbeitInventura";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.panelMain.ResumeLayout(false);
+            this.panelMain.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -437,7 +450,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button buttonSystemDelete;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button btn_Chat;
@@ -452,6 +465,7 @@
         private System.Windows.Forms.Button btn_New;
         private System.Windows.Forms.Button btn_SystemNameNew;
         private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.Button btn_Exocad;
     }
 }
 

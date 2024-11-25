@@ -52,11 +52,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exocad_Help\DentalCadFileWatcher.cs" />
+    <Compile Include="Exocad_Help\PathValidator.cs" />
     <Compile Include="Formes\Registrierung.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Formes\Registrierung.Designer.cs">
       <DependentUpon>Registrierung.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UC_Exocad.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UC_Exocad.Designer.cs">
+      <DependentUpon>UC_Exocad.cs</DependentUpon>
     </Compile>
     <Compile Include="UserInterface\Benutzer.cs" />
     <Compile Include="Formes\Login.cs">
@@ -116,6 +124,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Formes\Übersicht.resx">
       <DependentUpon>Übersicht.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UC_Exocad.resx">
+      <DependentUpon>UC_Exocad.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UC_History.resx">
       <DependentUpon>UC_History.cs</DependentUpon>

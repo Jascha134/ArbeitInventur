@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ArbeitInventur.Exocad_Help;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -16,15 +17,21 @@ namespace ArbeitInventur
         private Benutzer benutzer;
         private LogHandler logHandler;
 
+
         public Main(Benutzer benutzer)
         {
             InitializeComponent();
             this.benutzer = benutzer;
             Login.Instance.Hide();
             DGVSettings();
-            originalControls = panel1.Controls.Cast<Control>().ToArray();
+            originalControls = panelMain.Controls.Cast<Control>().ToArray();
             this.MinimumSize = new Size(1208, 759);
+
+            DentalCadFileWatcher fileWatcher = new DentalCadFileWatcher();
+            fileWatcher.StartWatching();
+
         }
+
         private void DGVSettings()
         {
             dataGridView2.CellFormatting += dataGridView2_CellFormatting;
@@ -487,26 +494,26 @@ namespace ArbeitInventur
         }
         private void button6_Click(object sender, EventArgs e)
         {
-            panel1.Controls.Clear();
+            panelMain.Controls.Clear();
             Uc_Settings uc_Settings = new Uc_Settings();
             uc_Settings.Dock = DockStyle.Fill;
-            panel1.Controls.Add(uc_Settings);
+            panelMain.Controls.Add(uc_Settings);
         }
         private Control[] originalControls;
         private void button7_Click(object sender, EventArgs e)
         {
             // Das Panel leeren
-            panel1.Controls.Clear();
+            panelMain.Controls.Clear();
 
             // Hier den ursprünglichen Inhalt wiederherstellen
             // Beispiel: Panel könnte vorher Label oder TextBox enthalten haben, dies hier wieder hinzufügen
-            panel1.Controls.AddRange(originalControls);
+            panelMain.Controls.AddRange(originalControls);
         }
         private void btn_Chat_Click(object sender, EventArgs e)
         {
             UC_Chatcs uC_Chatcs = new UC_Chatcs(benutzer);
-            panel1.Controls.Clear();
-            panel1.Controls.Add(uC_Chatcs);
+            panelMain.Controls.Clear();
+            panelMain.Controls.Add(uC_Chatcs);
         }
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -589,8 +596,15 @@ namespace ArbeitInventur
         private void button4_Click(object sender, EventArgs e)
         {
             UC_History uC_Chatcs = new UC_History(benutzer);
-            panel1.Controls.Clear();
-            panel1.Controls.Add(uC_Chatcs);
+            panelMain.Controls.Clear();
+            panelMain.Controls.Add(uC_Chatcs);
+        }
+
+        private void btn_Exocad_Click(object sender, EventArgs e)
+        {
+            UC_Exocad uC_Exocad = new UC_Exocad();
+            panelMain.Controls.Clear();
+            panelMain.Controls.Add(uC_Exocad);
         }
     }
 }
