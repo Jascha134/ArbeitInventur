@@ -53,7 +53,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Exocad_Help\DentalCadFileWatcher.cs" />
+    <Compile Include="Exocad_Help\FolderWatcherAndUploader.cs" />
     <Compile Include="Exocad_Help\PathValidator.cs" />
+    <Compile Include="Formes\PathSetupForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\PathSetupForm.Designer.cs">
+      <DependentUpon>PathSetupForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formes\Registrierung.cs">
       <SubType>Form</SubType>
     </Compile>

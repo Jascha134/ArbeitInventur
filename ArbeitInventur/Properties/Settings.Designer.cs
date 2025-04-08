@@ -82,5 +82,53 @@ namespace ArbeitInventur.Properties {
                 this["ExocaddentalCAD"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ServerTargetFolder {
+            get {
+                return ((string)(this["ServerTargetFolder"]));
+            }
+            set {
+                this["ServerTargetFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LocalScanFolder {
+            get {
+                return ((string)(this["LocalScanFolder"]));
+            }
+            set {
+                this["LocalScanFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableDentalCadWatcher {
+            get {
+                return ((bool)(this["EnableDentalCadWatcher"]));
+            }
+            set {
+                this["EnableDentalCadWatcher"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EnableFolderUploader {
+            get {
+                return ((bool)(this["EnableFolderUploader"]));
+            }
+            set {
+                this["EnableFolderUploader"] = value;
+            }
+        }
     }
 }
