@@ -9,13 +9,14 @@ namespace ArbeitInventur
     public class ProduktManager
     {
         private readonly string dateiPfad;
+        private List<ProduktFirma> cachedSystems;
 
         public ProduktManager(string pfad = null)
         {
             dateiPfad = pfad ?? Path.Combine(Properties.Settings.Default.DataJSON, "implantatsysteme.json");
+            cachedSystems = null;
         }
 
-        // Asynchrones Laden mit Task.Run für .NET Framework
         public Task<List<T>> LadeDatenAsync<T>()
         {
             return Task.Run(() =>
@@ -35,7 +36,6 @@ namespace ArbeitInventur
             });
         }
 
-        // Asynchrones Speichern mit Task.Run für .NET Framework
         public Task SpeichereDatenAsync<T>(List<T> daten)
         {
             return Task.Run(() =>
@@ -52,7 +52,21 @@ namespace ArbeitInventur
             });
         }
 
-        public Task<List<ProduktFirma>> LadeImplantatsystemeAsync() => LadeDatenAsync<ProduktFirma>();
-        public Task SpeichereImplantatsystemeAsync(List<ProduktFirma> implantatsysteme) => SpeichereDatenAsync(implantatsysteme);
+        public async Task<List<ProduktFirma>> LadeImplantatsystemeAsync()
+        {
+            if (cachedSystems != null)
+            {
+                return cachedSystems;
+            }
+
+            cachedSystems = await LadeDatenAsync<ProduktFirma>();
+            return cachedSystems;
+        }
+
+        public async Task SpeichereImplantatsystemeAsync(List<ProduktFirma> implantatsysteme)
+        {
+            cachedSystems = implantatsysteme;
+            await SpeichereDatenAsync(implantatsysteme);
+        }
     }
 }

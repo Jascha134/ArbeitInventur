@@ -44,6 +44,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.buttonSystemDelete = new System.Windows.Forms.Button();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.txtBarcodeInput = new System.Windows.Forms.TextBox();
             this.btn_SystemNameNew = new System.Windows.Forms.Button();
             this.btn_New = new System.Windows.Forms.Button();
             this.textBoxKategorie = new System.Windows.Forms.TextBox();
@@ -69,7 +70,7 @@
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(6, 216);
+            this.dataGridView1.Location = new System.Drawing.Point(20, 216);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(318, 392);
@@ -83,7 +84,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView2.Location = new System.Drawing.Point(333, 216);
+            this.dataGridView2.Location = new System.Drawing.Point(347, 216);
             this.dataGridView2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dataGridView2.Name = "dataGridView2";
             this.dataGridView2.Size = new System.Drawing.Size(804, 392);
@@ -212,6 +213,7 @@
             this.panelMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelMain.Controls.Add(this.txtBarcodeInput);
             this.panelMain.Controls.Add(this.btn_SystemNameNew);
             this.panelMain.Controls.Add(this.btn_New);
             this.panelMain.Controls.Add(this.textBoxKategorie);
@@ -240,6 +242,18 @@
             this.panelMain.Name = "panelMain";
             this.panelMain.Size = new System.Drawing.Size(1155, 623);
             this.panelMain.TabIndex = 16;
+            // 
+            // txtBarcodeInput
+            // 
+            this.txtBarcodeInput.Location = new System.Drawing.Point(6, 50);
+            this.txtBarcodeInput.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtBarcodeInput.Name = "txtBarcodeInput";
+            this.txtBarcodeInput.Size = new System.Drawing.Size(200, 26);
+            this.txtBarcodeInput.TabIndex = 29;
+            this.txtBarcodeInput.Text = "Barcode scannen...";
+            this.txtBarcodeInput.Enter += new System.EventHandler(this.txtBarcodeInput_Enter);
+            this.txtBarcodeInput.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtBarcodeInput_KeyPress);
+            this.txtBarcodeInput.Leave += new System.EventHandler(this.txtBarcodeInput_Leave);
             // 
             // btn_SystemNameNew
             // 
@@ -466,6 +480,6 @@
         private System.Windows.Forms.Button btn_SystemNameNew;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button btn_Exocad;
+        private System.Windows.Forms.TextBox txtBarcodeInput;
     }
 }
-

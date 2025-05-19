@@ -2,83 +2,110 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ArbeitInventur
 {
     public class LogHandler
     {
-        private readonly string logFilePath;
-        private readonly Benutzer benutzer;
-        private readonly object fileLock = new object();
+        private readonly string _logFilePath;
+        private readonly Benutzer _benutzer;
+        private List<LogEntry> _logEntries;
+        private readonly object _fileLock = new object();
 
-        public LogHandler(string path, Benutzer benutzer)
+        public LogHandler(string logFilePath, Benutzer benutzer = null)
         {
-            this.logFilePath = path;
-            this.benutzer = benutzer;
-            if (!File.Exists(logFilePath))
+            _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
+            _benutzer = benutzer;
+            _logEntries = new List<LogEntry>();
+            if (!File.Exists(_logFilePath))
             {
-                File.Create(logFilePath).Close();
+                File.Create(_logFilePath).Close();
             }
         }
 
-        // Synchrones Laden, da keine echte asynchrone Dateioperation verfügbar
-        public List<LogEntry> LoadLogs()
+        public List<LogEntry> LoadLogEntries()
         {
-            lock (fileLock)
+            lock (_fileLock)
             {
                 try
                 {
-                    if (File.Exists(logFilePath) && new FileInfo(logFilePath).Length > 0)
+                    if (File.Exists(_logFilePath) && new FileInfo(_logFilePath).Length > 0)
                     {
-                        string existingLogs = File.ReadAllText(logFilePath);
-                        return JsonConvert.DeserializeObject<List<LogEntry>>(existingLogs) ?? new List<LogEntry>();
+                        string json = File.ReadAllText(_logFilePath);
+                        if (!string.IsNullOrWhiteSpace(json))
+                        {
+                            _logEntries = JsonConvert.DeserializeObject<List<LogEntry>>(json) ?? new List<LogEntry>();
+                        }
                     }
                 }
+                catch (JsonReaderException ex)
+                {
+                    Console.WriteLine($"Fehler beim Lesen der Log-Datei: {ex.Message}. Starte mit leerer Liste.");
+                    _logEntries = new List<LogEntry>();
+                    string backupPath = _logFilePath + ".backup_" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                    File.Copy(_logFilePath, backupPath, true);
+                    File.WriteAllText(_logFilePath, JsonConvert.SerializeObject(_logEntries));
+                }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Fehler beim Laden der Log-Einträge: {ex.Message}");
+                    Console.WriteLine($"Unerwarteter Fehler beim Laden der Log-Datei: {ex.Message}");
+                    _logEntries = new List<LogEntry>();
                 }
-                return new List<LogEntry>();
+                return _logEntries.ToList();
             }
         }
 
-        public void LogAction(string actionDescription)
+        public List<LogEntry> GetTodayLogEntries()
         {
-            var logEntry = new LogEntry
+            lock (_fileLock)
             {
-                Timestamp = DateTime.Now,
-                Handlung = actionDescription,
-                Benutzer = benutzer
-            };
-            LogAction(logEntry);
+                return _logEntries.Where(entry => entry.Timestamp.Date == DateTime.Now.Date).ToList();
+            }
         }
 
-        private void LogAction(LogEntry logEntry)
+        public List<LogEntry> GetAllLogEntries()
         {
-            lock (fileLock)
+            lock (_fileLock)
+            {
+                return _logEntries.ToList();
+            }
+        }
+
+        public void AddToLog(string message, string action)
+        {
+            lock (_fileLock)
             {
                 try
                 {
-                    List<LogEntry> logEntries = new FileInfo(logFilePath).Length > 0
-                        ? JsonConvert.DeserializeObject<List<LogEntry>>(File.ReadAllText(logFilePath)) ?? new List<LogEntry>()
-                        : new List<LogEntry>();
-
-                    logEntries.Add(logEntry);
-                    string json = JsonConvert.SerializeObject(logEntries, Formatting.Indented);
-                    File.WriteAllText(logFilePath, json);
+                    var logEntry = new LogEntry
+                    {
+                        Timestamp = DateTime.Now,
+                        Benutzer = _benutzer,
+                        Action = action,
+                        Message = message
+                    };
+                    _logEntries.Add(logEntry);
+                    File.WriteAllText(_logFilePath, JsonConvert.SerializeObject(_logEntries, Formatting.Indented));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Fehler beim Protokollieren der Aktion: {ex.Message}");
+                    Console.WriteLine($"Fehler beim Schreiben in die Log-Datei: {ex.Message}");
                 }
             }
         }
 
-        public class LogEntry
+        public void LogAction(string message)
         {
-            public DateTime Timestamp { get; set; }
-            public Benutzer Benutzer { get; set; }
-            public string Handlung { get; set; }
+            AddToLog(message, "Action");
         }
+    }
+
+    public class LogEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public Benutzer Benutzer { get; set; }
+        public string Action { get; set; }
+        public string Message { get; set; }
     }
 }

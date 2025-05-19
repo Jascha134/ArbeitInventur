@@ -52,9 +52,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Barcode\ProduktDetail.cs" />
     <Compile Include="Exocad_Help\DentalCadFileWatcher.cs" />
     <Compile Include="Exocad_Help\FolderWatcherAndUploader.cs" />
     <Compile Include="Exocad_Help\PathValidator.cs" />
+    <Compile Include="Formes\AddProductForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\AddProductForm.Designer.cs">
+      <DependentUpon>AddProductForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formes\InventoryActionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\InventoryActionForm.Designer.cs">
+      <DependentUpon>InventoryActionForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Formes\PathSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -120,6 +133,12 @@
     </Compile>
     <Compile Include="UserInterface\BenutzerVerwaltung.cs" />
     <Compile Include="UserInterface\PasswortHashing.cs" />
+    <EmbeddedResource Include="Formes\AddProductForm.resx">
+      <DependentUpon>AddProductForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formes\InventoryActionForm.resx">
+      <DependentUpon>InventoryActionForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Formes\Login.resx">
       <DependentUpon>Login.cs</DependentUpon>
     </EmbeddedResource>

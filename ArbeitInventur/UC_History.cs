@@ -13,7 +13,7 @@ namespace ArbeitInventur
     public partial class UC_History : UserControl
     {
         private readonly LogHandler _logger;
-        private List<LogHandler.LogEntry> _logEntries;
+        private List<LogEntry> _logEntries; // Entferne LogHandler.
         private readonly Benutzer _benutzer;
 
         public UC_History(Benutzer benutzer)
@@ -22,25 +22,22 @@ namespace ArbeitInventur
 
             _benutzer = benutzer;
             _logger = new LogHandler(Properties.Settings.Default.DataJSON + "\\log.json", benutzer);
-            _logEntries = new List<LogHandler.LogEntry>();
+            _logEntries = new List<LogEntry>();
 
             listBoxTimestamp.SelectedIndexChanged += ListBoxTimestamp_SelectedIndexChanged;
 
-            // Log-Einträge werden nun nur bei Bedarf geladen (Lazy Loading)
             LoadUniqueDates();
         }
 
-        // Methode zum Lazy Laden der Log-Einträge
-        private List<LogHandler.LogEntry> LoadLogEntriesIfNeeded()
+        private List<LogEntry> LoadLogEntriesIfNeeded() // Entferne LogHandler.
         {
             if (_logEntries == null || !_logEntries.Any())
             {
-                _logEntries = _logger.LoadLogs();
+                _logEntries = _logger.LoadLogEntries(); // Ändere LoadLogs zu LoadLogEntries
             }
             return _logEntries;
         }
 
-        // Methode zum Laden der einzigartigen Datumsangaben in listBoxTimestamp
         private void LoadUniqueDates()
         {
             ClearListBoxes();
@@ -58,14 +55,12 @@ namespace ArbeitInventur
             }
         }
 
-        // Methode zum Leeren der ListBoxen (DRY Prinzip)
         private void ClearListBoxes()
         {
             listBoxTimestamp.Items.Clear();
             listBoxActions.Items.Clear();
         }
 
-        // Hilfsklasse zur Speicherung der ListBox-Items
         private class ListBoxItem
         {
             public DateTime Date { get; set; }
@@ -74,7 +69,6 @@ namespace ArbeitInventur
             public override string ToString() => DisplayText;
         }
 
-        // Event-Handler für Datumsauswahl
         private void ListBoxTimestamp_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBoxTimestamp.SelectedItem is ListBoxItem selectedItem)
@@ -83,7 +77,6 @@ namespace ArbeitInventur
             }
         }
 
-        // Aktualisiert die Actions-ListBox für das ausgewählte Datum
         private void UpdateActionsForDate(DateTime selectedDate)
         {
             var filteredEntries = LoadLogEntriesIfNeeded()
@@ -93,7 +86,7 @@ namespace ArbeitInventur
             listBoxActions.Items.Clear();
             foreach (var log in filteredEntries)
             {
-                listBoxActions.Items.Add($"[{log.Timestamp:HH:mm}] - {log.Benutzer.Name}: {log.Handlung}");
+                listBoxActions.Items.Add($"[{log.Timestamp:HH:mm}] - {log.Benutzer.Name}: {log.Action}"); // Ändere Handlung zu Action
             }
         }
     }

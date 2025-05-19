@@ -1,34 +1,36 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ArbeitInventur.Exocad_Help
 {
     public class FolderWatcherAndUploader : IDisposable
     {
-        private readonly string localFolderPath;  // Pfad zum überwachten lokalen Ordner auf PC2
-        private readonly string serverFolderPath; // Zielpfad auf dem Server
+        private readonly string localFolderPath;
+        private readonly string serverFolderPath;
         private readonly FileSystemWatcher watcher;
+        private readonly LogHandler _logHandler;
         private bool disposed = false;
 
-        public event Action<string> FolderUploaded; // Event, das ausgelöst wird, wenn der Ordner hochgeladen wurde
+        public event Action<string> FolderUploaded;
 
-        public FolderWatcherAndUploader(string localPath, string serverPath)
+        public FolderWatcherAndUploader(string localPath, string serverPath, LogHandler logHandler)
         {
             localFolderPath = localPath ?? throw new ArgumentNullException(nameof(localPath));
             serverFolderPath = serverPath ?? throw new ArgumentNullException(nameof(serverPath));
+            _logHandler = logHandler ?? throw new ArgumentNullException(nameof(logHandler));
 
-            // FileSystemWatcher initialisieren
             watcher = new FileSystemWatcher
             {
                 Path = localFolderPath,
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
-                Filter = "*.*", // Alle Dateien überwachen
+                Filter = "*.*",
                 EnableRaisingEvents = false
             };
 
-            watcher.Created += OnFileCreated;
-            watcher.Changed += OnFileChanged;
+            watcher.Created += async (s, e) => await OnFileCreated(s, e);
+            watcher.Changed += async (s, e) => await OnFileChanged(s, e);
         }
 
         public void StartWatching()
@@ -38,8 +40,12 @@ namespace ArbeitInventur.Exocad_Help
             {
                 Directory.CreateDirectory(localFolderPath);
             }
+            if (!Directory.Exists(serverFolderPath))
+            {
+                throw new ArgumentException($"Serverpfad {serverFolderPath} existiert nicht oder ist nicht zugänglich.");
+            }
             watcher.EnableRaisingEvents = true;
-            Console.WriteLine($"Überwachung von {localFolderPath} gestartet.");
+            _logHandler.AddToLog($"Überwachung von {localFolderPath} gestartet.", "Start");
         }
 
         public void StopWatching()
@@ -47,99 +53,111 @@ namespace ArbeitInventur.Exocad_Help
             if (!disposed)
             {
                 watcher.EnableRaisingEvents = false;
+                _logHandler.AddToLog($"Überwachung von {localFolderPath} gestoppt.", "Stopp");
             }
         }
 
-        private async void OnFileCreated(object sender, FileSystemEventArgs e)
-        {
-            await HandleFileEventAsync(e.FullPath);
-        }
-
-        private async void OnFileChanged(object sender, FileSystemEventArgs e)
-        {
-            await HandleFileEventAsync(e.FullPath);
-        }
-
-        private async Task HandleFileEventAsync(string filePath)
-        {
-            // Prüfen, ob die .dentalProject-Datei existiert (Signal für Scan-Abschluss)
-            if (Path.GetExtension(filePath).ToLower() == ".dentalproject" && IsFileReady(filePath))
-            {
-                try
-                {
-                    // Warten, bis alle Dateien geschrieben wurden (z. B. kurze Verzögerung)
-                    await Task.Delay(1000); // Anpassbar je nach Scan-Prozess
-
-                    // Ordner auf Server kopieren
-                    await CopyFolderToServerAsync();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Hochladen des Ordners: {ex.Message}");
-                }
-            }
-        }
-
-        private bool IsFileReady(string filePath)
+        private async Task OnFileCreated(object sender, FileSystemEventArgs e)
         {
             try
             {
-                using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
-                {
-                    return true;
-                }
+                await HandleFileEventAsync(e.FullPath, CancellationToken.None);
             }
-            catch (IOException)
+            catch (Exception ex)
             {
-                return false;
+                _logHandler.AddToLog($"Fehler in OnFileCreated: {ex.Message}", "Fehler");
             }
         }
 
-        private async Task CopyFolderToServerAsync()
+        private async Task OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                await HandleFileEventAsync(e.FullPath, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logHandler.AddToLog($"Fehler in OnFileChanged: {ex.Message}", "Fehler");
+            }
+        }
+
+        private async Task HandleFileEventAsync(string filePath, CancellationToken cancellationToken)
+        {
+            if (Path.GetExtension(filePath).ToLower() == ".dentalproject" && await IsFileReadyAsync(filePath, cancellationToken))
+            {
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                    await CopyFolderToServerAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logHandler.AddToLog($"Fehler beim Hochladen des Ordners: {ex.Message}", "Fehler");
+                }
+            }
+        }
+
+        private async Task<bool> IsFileReadyAsync(string filePath, CancellationToken cancellationToken)
+        {
+            int retries = 0;
+            const int maxRetries = 10;
+            while (retries < maxRetries)
+            {
+                try
+                {
+                    using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+                    {
+                        return true;
+                    }
+                }
+                catch (IOException)
+                {
+                    retries++;
+                    await Task.Delay(100, cancellationToken);
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            return false;
+        }
+
+        private async Task CopyFolderToServerAsync(CancellationToken cancellationToken)
         {
             try
             {
                 string folderName = Path.GetFileName(localFolderPath);
                 string targetPath = Path.Combine(serverFolderPath, folderName);
-
                 if (!Directory.Exists(serverFolderPath))
                 {
                     Directory.CreateDirectory(serverFolderPath);
                 }
-
-                // Kopieren des gesamten Ordners auf den Server
-                await Task.Run(() =>
-                {
-                    CopyDirectory(localFolderPath, targetPath);
-                });
-
-                Console.WriteLine($"Ordner {folderName} erfolgreich auf {serverFolderPath} hochgeladen.");
+                await CopyDirectoryAsync(localFolderPath, targetPath, cancellationToken);
+                _logHandler.AddToLog($"Ordner {folderName} erfolgreich auf {serverFolderPath} hochgeladen.", "Upload");
                 FolderUploaded?.Invoke($"Ordner {folderName} hochgeladen.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Kopieren des Ordners: {ex.Message}");
+                _logHandler.AddToLog($"Fehler beim Kopieren des Ordners: {ex.Message}", "Fehler");
                 throw;
             }
         }
 
-        private void CopyDirectory(string sourceDir, string destDir)
+        private async Task CopyDirectoryAsync(string sourceDir, string destDir, CancellationToken cancellationToken)
         {
             var dir = new DirectoryInfo(sourceDir);
             if (!dir.Exists) throw new DirectoryNotFoundException($"Quellordner nicht gefunden: {sourceDir}");
-
             Directory.CreateDirectory(destDir);
 
             foreach (var file in dir.GetFiles())
             {
                 string targetFilePath = Path.Combine(destDir, file.Name);
-                file.CopyTo(targetFilePath, true);
+                await Task.Run(() => file.CopyTo(targetFilePath, true), cancellationToken);
+                _logHandler.AddToLog($"Datei {file.Name} kopiert.", "Kopieren");
             }
 
             foreach (var subDir in dir.GetDirectories())
             {
                 string targetSubDirPath = Path.Combine(destDir, subDir.Name);
-                CopyDirectory(subDir.FullName, targetSubDirPath);
+                await CopyDirectoryAsync(subDir.FullName, targetSubDirPath, cancellationToken);
             }
         }
 

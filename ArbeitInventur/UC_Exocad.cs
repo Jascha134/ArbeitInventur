@@ -26,7 +26,6 @@ namespace ArbeitInventur
             txt_ServerTargetFolder.Text = Properties.Settings.Default.ServerTargetFolder ?? @"\\Server\DefaultTarget";
             listBox_Output.HorizontalScrollbar = true;
 
-            // CheckBoxen initialisieren
             chk_DentalCadWatcher.Checked = Properties.Settings.Default.EnableDentalCadWatcher;
             chk_FolderUploader.Checked = Properties.Settings.Default.EnableFolderUploader;
 
@@ -56,14 +55,14 @@ namespace ArbeitInventur
         {
             if (_fileWatcher != null)
             {
-                _fileWatcher.FileHandled -= OnFileHandled; // Event abmelden
+                _fileWatcher.FileHandled -= OnFileHandled;
                 _fileWatcher.StopWatching();
                 _fileWatcher.Dispose();
                 _fileWatcher = null;
             }
 
-            _fileWatcher = new DentalCadFileWatcher();
-            _fileWatcher.FileHandled += OnFileHandled; // Event neu abonnieren
+            _fileWatcher = new DentalCadFileWatcher(_logHandler, TimeSpan.FromSeconds(30), 10);
+            _fileWatcher.FileHandled += OnFileHandled;
 
             if (chk_DentalCadWatcher.Checked && !_dentalCadWatcherActive)
             {
@@ -98,7 +97,7 @@ namespace ArbeitInventur
                 return;
             }
 
-            _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder);
+            _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder, _logHandler);
             _folderUploader.FolderUploaded += OnFolderUploaded;
 
             if (chk_FolderUploader.Checked && !_folderUploaderActive)
@@ -117,7 +116,6 @@ namespace ArbeitInventur
 
         private void OnFileHandled(string message)
         {
-            // Diagnose: Prüfen, ob das Event ausgelöst wird
             Console.WriteLine($"FileHandled ausgelöst: {message}");
 
             if (IsHandleCreated && !IsDisposed)

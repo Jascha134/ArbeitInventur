@@ -1,17 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using System.Linq;
-using System.Threading.Tasks; // Für async/await benötigt
+using System.Threading.Tasks;
 
 namespace ArbeitInventur.Exocad_Help
 {
     public class DentalCadFileWatcher : IDisposable
     {
-        // Delegate-Definition hinzufügen
         public delegate void FileHandledEventHandler(string message);
         public event FileHandledEventHandler FileHandled;
 
@@ -20,34 +16,28 @@ namespace ArbeitInventur.Exocad_Help
         private readonly FileSystemWatcher _watcher;
         private readonly LogHandler _logHandler;
         private readonly HashSet<string> _processedFiles;
+        private readonly object _processedFilesLock = new object();
         private bool _disposed;
         private readonly TimeSpan _maxWaitTime;
         private readonly int _maxRetries;
 
-        public DentalCadFileWatcher() : this(TimeSpan.FromSeconds(5), 10) { }
-
-        public DentalCadFileWatcher(TimeSpan maxWaitTime, int maxRetries)
+        public DentalCadFileWatcher(LogHandler logHandler, TimeSpan maxWaitTime, int maxRetries)
         {
-            _watchFolderPath = Properties.Settings.Default.ExocadConstructions;
-            _targetFolderPath = Properties.Settings.Default.ExocaddentalCAD;
-            _logHandler = new LogHandler(Path.Combine(Properties.Settings.Default.DataJSON, "ExocadListLog.json"));
+            _watchFolderPath = Properties.Settings.Default.ExocadConstructions ?? throw new ArgumentException("ExocadConstructions-Pfad ist nicht konfiguriert.");
+            _targetFolderPath = Properties.Settings.Default.ExocaddentalCAD ?? throw new ArgumentException("ExocaddentalCAD-Pfad ist nicht konfiguriert.");
+            _logHandler = logHandler ?? throw new ArgumentNullException(nameof(logHandler));
             _processedFiles = new HashSet<string>();
             _watcher = InitializeFileWatcher();
             _maxWaitTime = maxWaitTime;
             _maxRetries = maxRetries;
-            try
-            {
-                _logHandler.LoadLogEntries();
-            }
-            catch (Exception ex)
-            {
-                // Fehler beim Laden der Logs sollte den Konstruktor nicht abbrechen
-                Console.WriteLine($"Warnung: Log-Initialisierung fehlgeschlagen: {ex.Message}");
-            }
         }
 
         private FileSystemWatcher InitializeFileWatcher()
         {
+            if (!Directory.Exists(_watchFolderPath))
+            {
+                throw new DirectoryNotFoundException($"Überwachungsordner {_watchFolderPath} existiert nicht.");
+            }
             return new FileSystemWatcher(_watchFolderPath)
             {
                 Filter = "*.dentalCAD",
@@ -60,26 +50,51 @@ namespace ArbeitInventur.Exocad_Help
         public void StartWatching()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(DentalCadFileWatcher));
+            if (!Directory.Exists(_targetFolderPath))
+            {
+                throw new DirectoryNotFoundException($"Zielordner {_targetFolderPath} existiert nicht.");
+            }
 
-            _watcher.Created += OnDentalCadFileEvent;
-            _watcher.Changed += OnDentalCadFileEvent;
-            _watcher.Renamed += OnDentalCadFileRenamed;
+            _watcher.Created += async (s, e) => await OnDentalCadFileEvent(s, e);
+            _watcher.Changed += async (s, e) => await OnDentalCadFileEvent(s, e);
+            _watcher.Renamed += async (s, e) => await OnDentalCadFileRenamed(s, e);
             _watcher.EnableRaisingEvents = true;
+            _logHandler.AddToLog("DentalCadFileWatcher gestartet.", "Start");
         }
 
-        private async void OnDentalCadFileEvent(object sender, FileSystemEventArgs e)
+        private async Task OnDentalCadFileEvent(object sender, FileSystemEventArgs e)
         {
-            await ProcessFileIfReadyAsync(e.FullPath, e.ChangeType.ToString().ToLower(), CancellationToken.None);
+            try
+            {
+                await ProcessFileIfReadyAsync(e.FullPath, e.ChangeType.ToString().ToLower(), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logHandler.AddToLog($"Fehler in OnDentalCadFileEvent: {ex.Message}", "Fehler");
+            }
         }
 
-        private async void OnDentalCadFileRenamed(object sender, RenamedEventArgs e)
+        private async Task OnDentalCadFileRenamed(object sender, RenamedEventArgs e)
         {
-            await ProcessFileIfReadyAsync(e.FullPath, e.ChangeType.ToString(), CancellationToken.None);
+            try
+            {
+                await ProcessFileIfReadyAsync(e.FullPath, e.ChangeType.ToString(), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logHandler.AddToLog($"Fehler in OnDentalCadFileRenamed: {ex.Message}", "Fehler");
+            }
         }
 
         private async Task ProcessFileIfReadyAsync(string filePath, string action, CancellationToken cancellationToken)
         {
-            if (_processedFiles.Contains(filePath) || !await IsFileReadyAsync(filePath, cancellationToken))
+            bool alreadyProcessed;
+            lock (_processedFilesLock)
+            {
+                alreadyProcessed = _processedFiles.Contains(filePath);
+            }
+
+            if (alreadyProcessed || !await IsFileReadyAsync(filePath, cancellationToken))
                 return;
 
             try
@@ -101,7 +116,10 @@ namespace ArbeitInventur.Exocad_Help
 
         private void ProcessSuccess(string filePath, string message, string action)
         {
-            _processedFiles.Add(filePath);
+            lock (_processedFilesLock)
+            {
+                _processedFiles.Add(filePath);
+            }
             _logHandler.AddToLog(message, action);
             FileHandled?.Invoke(message);
         }
@@ -115,7 +133,6 @@ namespace ArbeitInventur.Exocad_Help
         private async Task<bool> IsFileReadyAsync(string filePath, CancellationToken cancellationToken)
         {
             int retries = 0;
-
             while (retries < _maxRetries)
             {
                 try
@@ -163,23 +180,11 @@ namespace ArbeitInventur.Exocad_Help
             if (_disposed || _watcher == null) return;
 
             _watcher.EnableRaisingEvents = false;
-            _watcher.Created -= OnDentalCadFileEvent;
-            _watcher.Changed -= OnDentalCadFileEvent;
-            _watcher.Renamed -= OnDentalCadFileRenamed;
+            _watcher.Created -= async (s, e) => await OnDentalCadFileEvent(s, e);
+            _watcher.Changed -= async (s, e) => await OnDentalCadFileEvent(s, e);
+            _watcher.Renamed -= async (s, e) => await OnDentalCadFileRenamed(s, e);
             _watcher.Dispose();
             _logHandler.AddToLog("Überwachung von .dentalCAD-Dateien gestoppt.", "Stopp");
-        }
-
-        public void DisplayLogEntriesInListBox(ListBox listBox)
-        {
-            if (_disposed) throw new ObjectDisposedException(nameof(DentalCadFileWatcher));
-            if (listBox == null) return;
-
-            listBox.Items.Clear();
-            foreach (var entry in _logHandler.GetTodayLogEntries())
-            {
-                listBox.Items.Add($"{entry.Timestamp}: {entry.Action} - {entry.Message}");
-            }
         }
 
         public void Dispose()
@@ -204,93 +209,5 @@ namespace ArbeitInventur.Exocad_Help
         {
             Dispose(false);
         }
-    }
-    public class LogHandler
-    {
-        private readonly string _logFilePath;
-        private List<LogEntry> _logEntries;
-        private readonly object _fileLock = new object(); // Für Thread-Sicherheit
-
-        public LogHandler(string logFilePath)
-        {
-            _logFilePath = logFilePath;
-            _logEntries = new List<LogEntry>();
-
-            if (!File.Exists(_logFilePath))
-            {
-                File.Create(_logFilePath).Close();
-            }
-        }
-
-        public void LoadLogEntries()
-        {
-            lock (_fileLock)
-            {
-                try
-                {
-                    if (File.Exists(_logFilePath) && new FileInfo(_logFilePath).Length > 0)
-                    {
-                        string json = File.ReadAllText(_logFilePath);
-                        if (!string.IsNullOrWhiteSpace(json))
-                        {
-                            _logEntries = JsonConvert.DeserializeObject<List<LogEntry>>(json) ?? new List<LogEntry>();
-                        }
-                    }
-                }
-                catch (JsonReaderException ex)
-                {
-                    // Bei ungültigem JSON: Loggen und mit leerer Liste fortfahren
-                    Console.WriteLine($"Fehler beim Lesen der Log-Datei: {ex.Message}. Starte mit leerer Liste.");
-                    _logEntries = new List<LogEntry>();
-                    // Optional: Backup der beschädigten Datei erstellen
-                    string backupPath = _logFilePath + ".backup_" + DateTime.Now.ToString("yyyyMMddHHmmss");
-                    File.Copy(_logFilePath, backupPath, true);
-                    File.WriteAllText(_logFilePath, JsonConvert.SerializeObject(_logEntries));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Unerwarteter Fehler beim Laden der Log-Datei: {ex.Message}");
-                    _logEntries = new List<LogEntry>();
-                }
-            }
-        }
-
-        public List<LogEntry> GetTodayLogEntries()
-        {
-            lock (_fileLock)
-            {
-                return _logEntries.Where(entry => entry.Timestamp.Date == DateTime.Now.Date).ToList();
-            }
-        }
-
-        public void AddToLog(string message, string action)
-        {
-            lock (_fileLock)
-            {
-                try
-                {
-                    var logEntry = new LogEntry
-                    {
-                        Timestamp = DateTime.Now,
-                        Action = action,
-                        Message = message
-                    };
-
-                    _logEntries.Add(logEntry);
-                    File.WriteAllText(_logFilePath, JsonConvert.SerializeObject(_logEntries, Formatting.Indented));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Schreiben in die Log-Datei: {ex.Message}");
-                }
-            }
-        }
-    }
-
-    public class LogEntry
-    {
-        public DateTime Timestamp { get; set; }
-        public string Action { get; set; }
-        public string Message { get; set; }
     }
 }

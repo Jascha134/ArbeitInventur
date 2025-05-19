@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using ArbeitInventur.Barcode;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ArbeitInventur
 {
@@ -6,6 +8,14 @@ namespace ArbeitInventur
     {
         public int SystemID { get; set; }
         public string SystemName { get; set; }
-        public List<ProduktFirmaProdukte> Details { get; set; } = new List<ProduktFirmaProdukte>();
+
+        private List<ProduktDetail> _details = new List<ProduktDetail>();
+
+        [JsonProperty("Details")]
+        public List<ProduktDetail> Details
+        {
+            get => _details;
+            set => _details = value ?? new List<ProduktDetail>(); // Stelle sicher, dass Details nie null ist
+        }
     }
 }
