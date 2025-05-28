@@ -53,7 +53,6 @@ namespace ArbeitInventur.Exocad_Help
             if (!disposed)
             {
                 watcher.EnableRaisingEvents = false;
-                _logHandler.AddToLog($"Überwachung von {localFolderPath} gestoppt.", "Stopp");
             }
         }
 
@@ -126,17 +125,37 @@ namespace ArbeitInventur.Exocad_Help
             {
                 string folderName = Path.GetFileName(localFolderPath);
                 string targetPath = Path.Combine(serverFolderPath, folderName);
-                if (!Directory.Exists(serverFolderPath))
+                Directory.CreateDirectory(targetPath);
+
+                var dir = new DirectoryInfo(localFolderPath);
+                foreach (var file in dir.GetFiles("*.dentalproject"))
                 {
-                    Directory.CreateDirectory(serverFolderPath);
+                    try
+                    {
+                        string targetFilePath = Path.Combine(targetPath, file.Name);
+                        if (!File.Exists(targetFilePath) || file.LastWriteTime > File.GetLastWriteTime(targetFilePath))
+                        {
+                            await Task.Run(() => file.CopyTo(targetFilePath, true), cancellationToken);
+                            _logHandler.AddToLog($"Datei {file.Name} kopiert.", "Kopieren");
+                        }
+                    }
+                    catch (IOException ex)
+                    {
+                        _logHandler.AddToLog($"Fehler beim Kopieren der Datei {file.Name}: {ex.Message}", "Fehler");
+                    }
                 }
-                await CopyDirectoryAsync(localFolderPath, targetPath, cancellationToken);
+
                 _logHandler.AddToLog($"Ordner {folderName} erfolgreich auf {serverFolderPath} hochgeladen.", "Upload");
                 FolderUploaded?.Invoke($"Ordner {folderName} hochgeladen.");
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logHandler.AddToLog($"Zugriffsfehler beim Hochladen des Ordners: {ex.Message}", "Fehler");
+                throw;
+            }
             catch (Exception ex)
             {
-                _logHandler.AddToLog($"Fehler beim Kopieren des Ordners: {ex.Message}", "Fehler");
+                _logHandler.AddToLog($"Unbekannter Fehler beim Hochladen des Ordners: {ex.Message}", "Fehler");
                 throw;
             }
         }

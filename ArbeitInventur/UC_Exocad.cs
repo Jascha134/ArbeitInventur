@@ -64,13 +64,13 @@ namespace ArbeitInventur
             _fileWatcher = new DentalCadFileWatcher(_logHandler, TimeSpan.FromSeconds(30), 10);
             _fileWatcher.FileHandled += OnFileHandled;
 
-            if (chk_DentalCadWatcher.Checked && !_dentalCadWatcherActive)
+            if (chk_DentalCadWatcher.Checked)
             {
                 _fileWatcher.StartWatching();
                 _dentalCadWatcherActive = true;
                 LogMessage("DentalCadFileWatcher gestartet.");
             }
-            else if (!chk_DentalCadWatcher.Checked && _dentalCadWatcherActive)
+            else
             {
                 _fileWatcher.StopWatching();
                 _dentalCadWatcherActive = false;
@@ -100,13 +100,13 @@ namespace ArbeitInventur
             _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder, _logHandler);
             _folderUploader.FolderUploaded += OnFolderUploaded;
 
-            if (chk_FolderUploader.Checked && !_folderUploaderActive)
+            if (chk_FolderUploader.Checked)
             {
                 _folderUploader.StartWatching();
                 _folderUploaderActive = true;
                 LogMessage("FolderWatcherAndUploader gestartet.");
             }
-            else if (!chk_FolderUploader.Checked && _folderUploaderActive)
+            else
             {
                 _folderUploader.StopWatching();
                 _folderUploaderActive = false;
@@ -116,7 +116,7 @@ namespace ArbeitInventur
 
         private void OnFileHandled(string message)
         {
-            Console.WriteLine($"FileHandled ausgelöst: {message}");
+            listBox_Output.Items.Add($"FileHandled ausgelöst: {message}");
 
             if (IsHandleCreated && !IsDisposed)
             {
@@ -128,7 +128,7 @@ namespace ArbeitInventur
             }
             else
             {
-                Console.WriteLine("UI nicht bereit für Update: " + message);
+                listBox_Output.Items.Add("UI nicht bereit für Update: " + message);
             }
             _logHandler.LogAction(message);
         }
@@ -205,7 +205,6 @@ namespace ArbeitInventur
         {
             Properties.Settings.Default.EnableDentalCadWatcher = chk_DentalCadWatcher.Checked;
             Properties.Settings.Default.Save();
-            InitializeDentalCadWatcher();
         }
 
         private void chk_FolderUploader_CheckedChanged(object sender, EventArgs e)

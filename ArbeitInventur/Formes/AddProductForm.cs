@@ -8,415 +8,311 @@ namespace ArbeitInventur.Formes
 {
     public partial class AddProductForm : Form
     {
-        private readonly List<ProduktFirma> implantatsysteme;
-        private readonly ProduktManager manager;
-        private readonly LogHandler logHandler;
-        private readonly string barcode;
-        private readonly string produktId;
-        private readonly DateTime? produktionsdatum;
-        private readonly string lotNummer;
+        private readonly List<ProduktFirma> _implantatsysteme;
+        private readonly ProduktManager _manager;
+        private readonly LogHandler _logHandler;
+        private readonly string _barcode;
+        private readonly string _produktId;
+        private readonly DateTime? _produktionsdatum;
+        private readonly string _lotNummer;
+        private UC_AddToExisting _ucAddToExisting;
+        private UC_CreateNew _ucCreateNew;
 
         public ProduktDetail AddedProduct { get; private set; }
         public ProduktFirma SelectedSystem { get; private set; }
 
-        public AddProductForm(string barcode, string produktId, DateTime? produktionsdatum, string lotNummer, List<ProduktFirma> implantatsysteme, ProduktManager manager, LogHandler logHandler)
+        public AddProductForm(string barcode, string produktId, DateTime? produktionsdatum, string lotNummer, List<ProduktFirma> implantatsysteme, ProduktManager manager, LogHandler logHandler, string rbCreateNewName, bool rbAddToExistingEnable)
         {
             InitializeComponent();
-            this.barcode = barcode;
-            this.produktId = produktId;
-            this.produktionsdatum = produktionsdatum;
-            this.lotNummer = lotNummer;
-            this.implantatsysteme = implantatsysteme ?? new List<ProduktFirma>();
-            this.manager = manager;
-            this.logHandler = logHandler;
+            _barcode = barcode;
+            _produktId = produktId;
+            _produktionsdatum = produktionsdatum;
+            _lotNummer = lotNummer;
+            _implantatsysteme = implantatsysteme ?? new List<ProduktFirma>();
+            _manager = manager;
+            _logHandler = logHandler;
 
-            lblBarcode.Text = $"Barcode: {barcode}";
-            lb_ProductID.Text = $"Produkt ID: {produktId}";
+            rbAddToExisting.Visible = rbAddToExistingEnable;
+            if (!rbAddToExistingEnable)
+            {
+                rbAddToExisting.Checked = false;
+                rbCreateNew.Checked = true;
+            }
+
+            rbCreateNew.Text = rbCreateNewName;
+            lblBarcode.Text = $"Barcode: {barcode ?? "N/A"}";
+            lb_ProductID.Text = $"Produkt ID: {produktId ?? "N/A"}";
             lb_Productiondate.Text = $"Produktionsdatum: {produktionsdatum?.ToString("dd.MM.yyyy") ?? "N/A"}";
-            lb_Lot.Text = $"Lotnummer: {lotNummer}";
+            lb_Lot.Text = $"Lotnummer: {lotNummer ?? "N/A"}";
 
-            // Autovervollständigung für Kategorien
-            var categories = implantatsysteme.SelectMany(s => s.Details.Select(d => d.Kategorie)).Distinct().OrderBy(c => c).ToArray();
-            txtKategorie.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-            txtKategorie.AutoCompleteSource = AutoCompleteSource.CustomSource;
-            txtKategorie.AutoCompleteCustomSource.AddRange(categories);
+            _ucAddToExisting = new UC_AddToExisting(_implantatsysteme) { Dock = DockStyle.Fill };
+            _ucCreateNew = new UC_CreateNew(_implantatsysteme) { Dock = DockStyle.Fill };
 
-            // Kategorien in ComboBox laden
-            cbCategories.Items.AddRange(categories);
-            if (categories.Length == 0)
+            // Vorhandenes Produkt vorfüllen, basierend auf dem übergebenen Produkt
+            if (!rbAddToExistingEnable) // Bearbeitungsmodus
             {
-                chkNewCategory.Checked = true;
-                chkNewCategory.Enabled = false;
-            }
-            else if (cbCategories.Items.Count > 0)
-            {
-                cbCategories.SelectedIndex = 0;
+                // Im Bearbeitungsmodus suchen wir das Produkt direkt über die übergebenen Werte
+                var existingProduct = _implantatsysteme
+                    .SelectMany(s => s.Details)
+                    .FirstOrDefault(d =>
+                        (d.Barcode == barcode || (string.IsNullOrEmpty(barcode) && string.IsNullOrEmpty(d.Barcode))) &&
+                        (d.LotNummer == lotNummer || (string.IsNullOrEmpty(lotNummer) && string.IsNullOrEmpty(d.LotNummer))) &&
+                        d.ProduktId == produktId &&
+                        d.Produktionsdatum == produktionsdatum);
+
+                if (existingProduct != null)
+                {
+                    var system = _implantatsysteme.FirstOrDefault(s => s.Details.Contains(existingProduct));
+                    if (system != null)
+                    {
+                        // UC_CreateNew initialisieren
+                        _ucCreateNew.TxtBeschreibung.Text = existingProduct.Beschreibung;
+                        _ucCreateNew.TxtMenge.Text = existingProduct.Menge.ToString();
+                        _ucCreateNew.TxtMindestbestand.Text = existingProduct.Mindestbestand.ToString();
+                        if (_ucCreateNew.CbCategories.Items.Contains(existingProduct.Kategorie))
+                        {
+                            _ucCreateNew.CbCategories.SelectedIndex = _ucCreateNew.CbCategories.Items.IndexOf(existingProduct.Kategorie);
+                        }
+                        else
+                        {
+                            _ucCreateNew.ChkNewCategory.Checked = true;
+                            _ucCreateNew.TxtKategorie.Text = existingProduct.Kategorie;
+                        }
+
+                        // Bestehendes System auswählen
+                        if (_ucCreateNew.CbExistingSystems.Items.Contains(system.SystemName))
+                        {
+                            _ucCreateNew.CbExistingSystems.SelectedIndex = _ucCreateNew.CbExistingSystems.Items.IndexOf(system.SystemName);
+                        }
+                        else
+                        {
+                            _ucCreateNew.ChkNewSystem.Checked = true;
+                            _ucCreateNew.TxtNewSystemName.Text = system.SystemName;
+                        }
+
+                        // UC_AddToExisting initialisieren (falls benötigt)
+                        if (rbAddToExistingEnable)
+                        {
+                            _ucAddToExisting.CbSystems.SelectedIndex = _ucAddToExisting.CbSystems.Items.IndexOf(system.SystemName);
+                            _ucAddToExisting.UpdateProductsComboBox();
+                            if (_ucAddToExisting.CbProducts.Items.Contains(existingProduct.Beschreibung))
+                            {
+                                _ucAddToExisting.CbProducts.SelectedIndex = _ucAddToExisting.CbProducts.Items.IndexOf(existingProduct.Beschreibung);
+                            }
+                        }
+                    }
+                }
             }
 
-            // Standardwerte
-            txtMenge.Text = "1";
-            txtMindestbestand.Text = "0";
-
-            if (implantatsysteme.Any())
-            {
-                cbSystems.Items.AddRange(implantatsysteme.Select(s => s.SystemName).ToArray());
-                cbExistingSystems.Items.AddRange(implantatsysteme.Select(s => s.SystemName).ToArray());
-                if (cbSystems.Items.Count > 0) cbSystems.SelectedIndex = 0;
-                if (cbExistingSystems.Items.Count > 0) cbExistingSystems.SelectedIndex = 0;
-            }
-            else
+            if (!_implantatsysteme.Any())
             {
                 MessageBox.Show("Keine Systeme vorhanden. Bitte legen Sie zuerst ein System an.", "Hinweis", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 rbAddToExisting.Enabled = false;
                 rbCreateNew.Checked = true;
             }
 
-            // Ereignishandler
-            rbAddToExisting.CheckedChanged += rbAddToExisting_CheckedChanged;
-            rbCreateNew.CheckedChanged += rbCreateNew_CheckedChanged;
-            chkNewSystem.CheckedChanged += chkNewSystem_CheckedChanged;
-            chkNewCategory.CheckedChanged += chkNewCategory_CheckedChanged;
-            cbSystems.SelectedIndexChanged += (s, e) => UpdateProductsComboBox();
-            btnOk.Click += (s, e) => BtnOk_Click();
-            btnCancel.Click += (s, e) => Close();
-
-            UpdateControlVisibility();
+            UpdateUserControl();
         }
 
-        private void UpdateControlVisibility()
+        private void RbAddToExisting_CheckedChanged(object sender, EventArgs e)
         {
-            bool addToExisting = rbAddToExisting.Checked;
-            bool creatingNew = rbCreateNew.Checked;
+            UpdateUserControl();
+        }
 
-            lblSystem.Visible = addToExisting;
-            cbSystems.Visible = addToExisting;
-            lblProduct.Visible = addToExisting;
-            cbProducts.Visible = addToExisting;
-            chkNewCategory.Visible = creatingNew;
-            lblBeschreibung.Visible = creatingNew;
-            txtBeschreibung.Visible = creatingNew;
-            lblMenge.Visible = creatingNew;
-            txtMenge.Visible = creatingNew;
-            lblMindestbestand.Visible = creatingNew;
-            txtMindestbestand.Visible = creatingNew;
+        private void RbCreateNew_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUserControl();
+        }
 
-            chkNewSystem.Visible = creatingNew;
-            if (creatingNew)
+        private void UpdateUserControl()
+        {
+            _controlPanel.Controls.Clear();
+            if (rbAddToExisting.Checked)
             {
-                ToggleSystemSelection();
-                ToggleCategorySelection();
+                _controlPanel.Size = new System.Drawing.Size(350, 100);
+                _controlPanel.Controls.Add(_ucAddToExisting);
             }
             else
             {
-                txtNewSystemName.Visible = false;
-                cbExistingSystems.Visible = false;
-                cbCategories.Visible = false;
-                txtKategorie.Visible = false;
+                _controlPanel.Size = new System.Drawing.Size(350, 220);
+                _controlPanel.Controls.Add(_ucCreateNew);
             }
         }
 
-        private void ToggleSystemSelection()
-        {
-            txtNewSystemName.Visible = chkNewSystem.Checked;
-            cbExistingSystems.Visible = !chkNewSystem.Checked;
-        }
-
-        private void ToggleCategorySelection()
-        {
-            txtKategorie.Visible = chkNewCategory.Checked;
-            cbCategories.Visible = !chkNewCategory.Checked;
-        }
-
-        private void rbAddToExisting_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateControlVisibility();
-        }
-
-        private void rbCreateNew_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateControlVisibility();
-        }
-
-        private void chkNewSystem_CheckedChanged(object sender, EventArgs e)
-        {
-            ToggleSystemSelection();
-        }
-
-        private void chkNewCategory_CheckedChanged(object sender, EventArgs e)
-        {
-            ToggleCategorySelection();
-        }
-
-        private void UpdateProductsComboBox()
-        {
-            if (cbProducts == null)
-            {
-                MessageBox.Show("Die ComboBox 'cbProducts' wurde nicht initialisiert.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            cbProducts.Items.Clear();
-
-            if (implantatsysteme == null || !implantatsysteme.Any())
-            {
-                return;
-            }
-
-            if (cbSystems == null || cbSystems.SelectedIndex < 0 || cbSystems.SelectedItem == null)
-            {
-                return;
-            }
-
-            var selectedSystem = implantatsysteme.FirstOrDefault(s => s.SystemName == cbSystems.SelectedItem.ToString());
-            if (selectedSystem == null)
-            {
-                return;
-            }
-
-            if (selectedSystem.Details == null)
-            {
-                selectedSystem.Details = new List<ProduktDetail>();
-            }
-
-            var validDescriptions = selectedSystem.Details
-                .Where(d => d != null && !string.IsNullOrEmpty(d.Beschreibung))
-                .Select(d => d.Beschreibung)
-                .ToArray();
-
-            cbProducts.Items.AddRange(validDescriptions);
-            if (cbProducts.Items.Count > 0)
-            {
-                cbProducts.SelectedIndex = 0;
-            }
-        }
-
-        private async void BtnOk_Click()
+        private async void BtnOk_Click(object sender, EventArgs e)
         {
             if (rbAddToExisting.Checked)
             {
-                if (cbSystems.SelectedIndex < 0 || cbProducts.SelectedIndex < 0)
+                if (_ucAddToExisting.CbSystems.SelectedIndex < 0 || _ucAddToExisting.CbProducts.SelectedIndex < 0)
                 {
                     MessageBox.Show("Bitte wählen Sie ein System und ein Produkt aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                var selectedSystem = implantatsysteme.FirstOrDefault(s => s.SystemName == cbSystems.SelectedItem.ToString());
+                var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == _ucAddToExisting.CbSystems.SelectedItem.ToString());
                 if (selectedSystem != null)
                 {
-                    var selectedProduct = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == cbProducts.SelectedItem.ToString());
+                    var selectedProduct = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == _ucAddToExisting.CbProducts.SelectedItem.ToString());
                     if (selectedProduct != null)
                     {
-                        selectedProduct.Barcode = barcode;
-                        selectedProduct.ProduktId = produktId;
-                        selectedProduct.Produktionsdatum = produktionsdatum;
-                        selectedProduct.LotNummer = lotNummer;
-                        AddedProduct = selectedProduct;
-                        SelectedSystem = selectedSystem;
-                        logHandler.LogAction($"QR-Code {barcode} wurde dem Produkt {selectedProduct.Beschreibung} im System {selectedSystem.SystemName} zugewiesen.");
-                    }
-                }
-            }
-            else
-            {
-                if (chkNewSystem.Checked)
-                {
-                    string newSystemName = txtNewSystemName.Text.Trim();
-                    if (string.IsNullOrEmpty(newSystemName))
-                    {
-                        MessageBox.Show("Bitte geben Sie einen Namen für das neue System ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    SelectedSystem = new ProduktFirma { SystemName = newSystemName };
-                    implantatsysteme.Add(SelectedSystem);
-                }
-                else
-                {
-                    if (cbExistingSystems.SelectedIndex < 0)
-                    {
-                        MessageBox.Show("Bitte wählen Sie ein bestehendes System aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    SelectedSystem = implantatsysteme[cbExistingSystems.SelectedIndex];
-                }
-
-                string category;
-                if (chkNewCategory.Checked)
-                {
-                    if (string.IsNullOrWhiteSpace(txtKategorie.Text))
-                    {
-                        MessageBox.Show("Bitte geben Sie eine neue Kategorie ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    category = txtKategorie.Text;
-                }
-                else
-                {
-                    if (cbCategories.SelectedItem == null)
-                    {
-                        MessageBox.Show("Bitte wählen Sie eine bestehende Kategorie aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    category = cbCategories.SelectedItem.ToString();
-                }
-
-                if (string.IsNullOrWhiteSpace(txtBeschreibung.Text) ||
-                    !int.TryParse(txtMenge.Text, out int menge) || !int.TryParse(txtMindestbestand.Text, out int mindestbestand))
-                {
-                    MessageBox.Show("Bitte füllen Sie alle Felder korrekt aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                var newProduct = new ProduktDetail
-                {
-                    Kategorie = category,
-                    Beschreibung = txtBeschreibung.Text,
-                    Menge = menge,
-                    Mindestbestand = mindestbestand,
-                    Barcode = barcode,
-                    ProduktId = produktId,
-                    Produktionsdatum = produktionsdatum,
-                    LotNummer = lotNummer
-                };
-
-                if (SelectedSystem.Details == null)
-                {
-                    SelectedSystem.Details = new List<ProduktDetail>();
-                }
-                SelectedSystem.Details.Add(newProduct);
-                AddedProduct = newProduct;
-                logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {barcode} im System {SelectedSystem.SystemName} erstellt.");
-            }
-
-            await manager.SpeichereImplantatsystemeAsync(implantatsysteme);
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        private async void btnOk_Click(object sender, EventArgs e)
-        {
-            if (rbAddToExisting.Checked)
-            {
-                if (cbSystems.SelectedIndex < 0 || cbProducts.SelectedIndex < 0)
-                {
-                    MessageBox.Show("Bitte wählen Sie ein System und ein Produkt aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                var selectedSystem = implantatsysteme.FirstOrDefault(s => s.SystemName == cbSystems.SelectedItem.ToString());
-                if (selectedSystem != null)
-                {
-                    var selectedProduct = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == cbProducts.SelectedItem.ToString());
-                    if (selectedProduct != null)
-                    {
-                        // Prüfen, ob ein Produkt mit gleichem Barcode oder Produkt-ID, aber anderer Lot-Nummer existiert
                         var existingProduct = selectedSystem.Details.FirstOrDefault(d =>
-                            (d.Barcode == barcode || d.ProduktId == produktId) && d.LotNummer != lotNummer);
+                            (d.Barcode == _barcode || (string.IsNullOrEmpty(_barcode) && string.IsNullOrEmpty(d.Barcode))) &&
+                            (d.LotNummer == _lotNummer || (string.IsNullOrEmpty(_lotNummer) && string.IsNullOrEmpty(d.LotNummer))));
                         if (existingProduct != null)
                         {
-                            // Neues ProduktDetail für andere Lot-Nummer erstellen
+                            // Produkt aktualisieren
+                            existingProduct.Barcode = _barcode;
+                            existingProduct.ProduktId = _produktId;
+                            existingProduct.Produktionsdatum = _produktionsdatum;
+                            existingProduct.LotNummer = _lotNummer;
+                            AddedProduct = existingProduct;
+                            _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} im System {selectedSystem.SystemName} aktualisiert.");
+                        }
+                        else
+                        {
                             var newProduct = new ProduktDetail
                             {
                                 Kategorie = selectedProduct.Kategorie,
                                 Beschreibung = selectedProduct.Beschreibung,
                                 Menge = 1,
                                 Mindestbestand = selectedProduct.Mindestbestand,
-                                Barcode = barcode,
-                                ProduktId = produktId,
-                                Produktionsdatum = produktionsdatum,
-                                LotNummer = lotNummer
+                                Barcode = _barcode,
+                                ProduktId = _produktId,
+                                Produktionsdatum = _produktionsdatum,
+                                LotNummer = _lotNummer
                             };
                             selectedSystem.Details.Add(newProduct);
                             AddedProduct = newProduct;
-                            logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {barcode} und Lot-Nummer {lotNummer} im System {selectedSystem.SystemName} erstellt.");
+                            _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} und Lot-Nummer {_lotNummer} im System {selectedSystem.SystemName} erstellt.");
                         }
-                        else
-                        {
-                            // Bestehendes Produkt aktualisieren
-                            selectedProduct.Barcode = barcode;
-                            selectedProduct.ProduktId = produktId;
-                            selectedProduct.Produktionsdatum = produktionsdatum;
-                            selectedProduct.LotNummer = lotNummer;
-                            AddedProduct = selectedProduct;
-                            logHandler.LogAction($"QR-Code {barcode} wurde dem Produkt {selectedProduct.Beschreibung} im System {selectedSystem.SystemName} zugewiesen.");
-                        }
+                        SelectedSystem = selectedSystem;
                     }
                 }
             }
             else
             {
-                // Bestehende Logik für neues Produkt bleibt weitgehend gleich
-                if (chkNewSystem.Checked)
+                if (_ucCreateNew.ChkNewSystem.Checked)
                 {
-                    string newSystemName = txtNewSystemName.Text.Trim();
+                    string newSystemName = _ucCreateNew.TxtNewSystemName.Text.Trim();
                     if (string.IsNullOrEmpty(newSystemName))
                     {
                         MessageBox.Show("Bitte geben Sie einen Namen für das neue System ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                     SelectedSystem = new ProduktFirma { SystemName = newSystemName };
-                    implantatsysteme.Add(SelectedSystem);
+                    _implantatsysteme.Add(SelectedSystem);
                 }
                 else
                 {
-                    if (cbExistingSystems.SelectedIndex < 0)
+                    if (_ucCreateNew.CbExistingSystems.SelectedIndex < 0)
                     {
                         MessageBox.Show("Bitte wählen Sie ein bestehendes System aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    SelectedSystem = implantatsysteme[cbExistingSystems.SelectedIndex];
+                    SelectedSystem = _implantatsysteme[_ucCreateNew.CbExistingSystems.SelectedIndex];
                 }
 
                 string category;
-                if (chkNewCategory.Checked)
+                if (_ucCreateNew.ChkNewCategory.Checked)
                 {
-                    if (string.IsNullOrWhiteSpace(txtKategorie.Text))
+                    if (string.IsNullOrWhiteSpace(_ucCreateNew.TxtKategorie.Text))
                     {
                         MessageBox.Show("Bitte geben Sie eine neue Kategorie ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    category = txtKategorie.Text;
+                    category = _ucCreateNew.TxtKategorie.Text;
                 }
                 else
                 {
-                    if (cbCategories.SelectedItem == null)
+                    if (_ucCreateNew.CbCategories.SelectedItem == null)
                     {
-                        MessageBox.Show("Bitte wählen Sie eine bestehende Kategorie aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("Bitte wählen Sie eine Kategorie aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    category = cbCategories.SelectedItem.ToString();
+                    category = _ucCreateNew.CbCategories.SelectedItem.ToString();
                 }
 
-                if (string.IsNullOrWhiteSpace(txtBeschreibung.Text) ||
-                    !int.TryParse(txtMenge.Text, out int menge) || !int.TryParse(txtMindestbestand.Text, out int mindestbestand))
+                if (string.IsNullOrWhiteSpace(_ucCreateNew.TxtBeschreibung.Text) ||
+                    !int.TryParse(_ucCreateNew.TxtMenge.Text, out int menge) || !int.TryParse(_ucCreateNew.TxtMindestbestand.Text, out int mindestbestand))
                 {
                     MessageBox.Show("Bitte füllen Sie alle Felder korrekt aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                var newProduct = new ProduktDetail
+                // Prüfen, ob ein bestehendes Produkt im Bearbeitungsmodus aktualisiert werden soll
+                if (!rbAddToExisting.Enabled)
                 {
-                    Kategorie = category,
-                    Beschreibung = txtBeschreibung.Text,
-                    Menge = menge,
-                    Mindestbestand = mindestbestand,
-                    Barcode = barcode,
-                    ProduktId = produktId,
-                    Produktionsdatum = produktionsdatum,
-                    LotNummer = lotNummer
-                };
-
-                if (SelectedSystem.Details == null)
-                {
-                    SelectedSystem.Details = new List<ProduktDetail>();
+                    var existingProduct = SelectedSystem.Details?.FirstOrDefault(d =>
+                        (d.Barcode == _barcode || (string.IsNullOrEmpty(_barcode) && string.IsNullOrEmpty(d.Barcode))) &&
+                        (d.LotNummer == _lotNummer || (string.IsNullOrEmpty(_lotNummer) && string.IsNullOrEmpty(d.LotNummer))));
+                    if (existingProduct != null)
+                    {
+                        // Bestehendes Produkt aktualisieren
+                        existingProduct.Kategorie = category;
+                        existingProduct.Beschreibung = _ucCreateNew.TxtBeschreibung.Text;
+                        existingProduct.Menge = menge;
+                        existingProduct.Mindestbestand = mindestbestand;
+                        existingProduct.Barcode = _barcode;
+                        existingProduct.ProduktId = _produktId;
+                        existingProduct.Produktionsdatum = _produktionsdatum;
+                        existingProduct.LotNummer = _lotNummer;
+                        AddedProduct = existingProduct;
+                        _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} im System {SelectedSystem.SystemName} aktualisiert.");
+                    }
+                    else
+                    {
+                        // Neues Produkt erstellen
+                        var newProduct = new ProduktDetail
+                        {
+                            Kategorie = category,
+                            Beschreibung = _ucCreateNew.TxtBeschreibung.Text,
+                            Menge = menge,
+                            Mindestbestand = mindestbestand,
+                            Barcode = _barcode,
+                            ProduktId = _produktId,
+                            Produktionsdatum = _produktionsdatum,
+                            LotNummer = _lotNummer
+                        };
+                        if (SelectedSystem.Details == null)
+                        {
+                            SelectedSystem.Details = new List<ProduktDetail>();
+                        }
+                        SelectedSystem.Details.Add(newProduct);
+                        AddedProduct = newProduct;
+                        _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} im System {SelectedSystem.SystemName} erstellt.");
+                    }
                 }
-                SelectedSystem.Details.Add(newProduct);
-                AddedProduct = newProduct;
-                logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {barcode} im System {SelectedSystem.SystemName} erstellt.");
+                else
+                {
+                    var newProduct = new ProduktDetail
+                    {
+                        Kategorie = category,
+                        Beschreibung = _ucCreateNew.TxtBeschreibung.Text,
+                        Menge = menge,
+                        Mindestbestand = mindestbestand,
+                        Barcode = _barcode,
+                        ProduktId = _produktId,
+                        Produktionsdatum = _produktionsdatum,
+                        LotNummer = _lotNummer
+                    };
+                    if (SelectedSystem.Details == null)
+                    {
+                        SelectedSystem.Details = new List<ProduktDetail>();
+                    }
+                    SelectedSystem.Details.Add(newProduct);
+                    AddedProduct = newProduct;
+                    _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} im System {SelectedSystem.SystemName} erstellt.");
+                }
             }
 
-            await manager.SpeichereImplantatsystemeAsync(implantatsysteme);
+            await _manager.SpeichereImplantatsystemeAsync(_implantatsysteme);
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -4,6 +4,7 @@ namespace ArbeitInventur.Barcode
 {
     public class ProduktDetail
     {
+        public int Id { get; set; } // Eindeutige ID
         public string Kategorie { get; set; }
         public string Beschreibung { get; set; }
         public int Menge { get; set; }

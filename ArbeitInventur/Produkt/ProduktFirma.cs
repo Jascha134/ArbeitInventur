@@ -7,7 +7,8 @@ namespace ArbeitInventur
     public class ProduktFirma
     {
         public int SystemID { get; set; }
-        public string SystemName { get; set; }
+        public string Name { get; set; }
+        public string KundenNummer { get; set; }
 
         private List<ProduktDetail> _details = new List<ProduktDetail>();
 

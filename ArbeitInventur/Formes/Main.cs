@@ -27,6 +27,7 @@ namespace ArbeitInventur
         private readonly Dictionary<string, (ProduktFirma System, ProduktDetail Product)> _barcodeIndex;
         private Control[] _originalControls;
         private bool _disposed;
+        private ContextMenuStrip _contextMenuStrip;
 
         public Main(Benutzer benutzer)
         {
@@ -36,13 +37,12 @@ namespace ArbeitInventur
             // Pfade validieren und ggf. Setup-Fenster anzeigen
             if (!ArePathsValid())
             {
-                using (var pathSetupForm = new PathSetupForm())
-                {
-                    if (pathSetupForm.ShowDialog() != DialogResult.OK)
-                    {
-                        throw new Exception("Pfad-Konfiguration abgebrochen. Programm wird beendet.");
-                    }
-                }
+            }
+
+            // Validierung des DataJSON-Pfads
+            if (!Directory.Exists(Properties.Settings.Default.DataJSON))
+            {
+                Directory.CreateDirectory(Properties.Settings.Default.DataJSON);
             }
 
             InitializeComponent();
@@ -68,13 +68,12 @@ namespace ArbeitInventur
 
             InitializeFileWatchers();
             InitializeUI();
+            InitializeContextMenu();
             UpdateBarcodeIndex();
 
             CheckAndTransferPendingFolders(
                 Properties.Settings.Default.ServerTargetFolder,
                 Properties.Settings.Default.ExocadConstructions);
-
-            LogMessage("Überwachung in Main gestartet.");
         }
 
         #region Initialisierung
@@ -95,6 +94,15 @@ namespace ArbeitInventur
             ConfigureDataGridViews();
             if (Login.Instance != null) Login.Instance.Hide();
             lb_Benutzer.Text = $"Benutzer: {_benutzer.Name}";
+            btn_RefreshHistory.Click += btn_RefreshHistory_Click;
+        }
+
+        private void InitializeContextMenu()
+        {
+            _contextMenuStrip = new ContextMenuStrip();
+            _contextMenuStrip.Items.Add("Bearbeiten", null, ContextMenuEdit_Click);
+            _contextMenuStrip.Items.Add("Löschen", null, ContextMenuDelete_Click);
+            dataGridView2.ContextMenuStrip = _contextMenuStrip;
         }
 
         private void ConfigureDataGridViews()
@@ -122,55 +130,6 @@ namespace ArbeitInventur
         #endregion
 
         #region QR-Code-Verarbeitung
-
-        private bool IsValidBarcode(string barcode)
-        {
-            if (string.IsNullOrEmpty(barcode) || barcode == "Barcode scannen...")
-                return false;
-
-            // Unterstützung für verschiedene QR-Code-Formate
-            // 1. GS1-Format (z. B. MEDENTIKA: 01<14 Ziffern>11<6 Ziffern>10<Lot>)
-            var gs1Match = Regex.Match(barcode, @"^01(\d{14})11(\d{6})10([\w\s]{1,20})$");
-            if (gs1Match.Success)
-            {
-                string produktId = gs1Match.Groups[1].Value;
-                string datum = gs1Match.Groups[2].Value;
-                string lot = gs1Match.Groups[3].Value;
-
-                if (!Regex.IsMatch(produktId, @"^\d{14}$") ||
-                    !DateTime.TryParseExact(datum, "ddMMyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _) ||
-                    string.IsNullOrEmpty(lot))
-                {
-                    _logHandler.LogAction($"Ungültiges GS1-Format: Produkt-ID={produktId}, Datum={datum}, Lot={lot}");
-                    return false;
-                }
-                return true;
-            }
-
-            // 2. MaschieneWerkzeug (z. B. +E0007606629/$$8017/SZ)
-            if (barcode.StartsWith("+E"))
-            {
-                var parts = barcode.Split('/');
-                return parts.Length >= 1 && !string.IsNullOrEmpty(parts[0]);
-            }
-
-            // 3. Sinterperlen (z. B. +611787559/$$8017BLF824/SE000N)
-            if (barcode.StartsWith("+6"))
-            {
-                var parts = barcode.Split('/');
-                return parts.Length >= 1 && !string.IsNullOrEmpty(parts[0]);
-            }
-
-            // 4. Dentsply Sirona (z. B. +D00181030161/$$70000051362/16D20241101/14D20341101E)
-            if (barcode.StartsWith("+D"))
-            {
-                var parts = barcode.Split('/');
-                return parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1]);
-            }
-
-            _logHandler.LogAction($"Unbekanntes QR-Code-Format: {barcode}");
-            return false;
-        }
 
         private (string Barcode, string ProduktId, DateTime? Produktionsdatum, string LotNummer) ParseQRCode(string barcode)
         {
@@ -276,7 +235,7 @@ namespace ArbeitInventur
                 else
                 {
                     // Produkt existiert nicht, öffne AddProductForm
-                    using (var addForm = new AddProductForm(barcodeId, produktId, produktionsdatum, lotNummer, _implantatsysteme, _produktManager, _logHandler))
+                    using (var addForm = new AddProductForm(barcodeId, produktId, produktionsdatum, lotNummer, _implantatsysteme, _produktManager, _logHandler, "Neues Produkt erstellen",true))
                     {
                         if (addForm.ShowDialog() == DialogResult.OK)
                         {
@@ -323,7 +282,6 @@ namespace ArbeitInventur
 
         private async Task LadeImplantatsystemeAsync()
         {
-            // Manipuliere die bestehende Liste, anstatt sie neu zuzuweisen
             _implantatsysteme.Clear();
             var loadedSystems = await _produktManager.LadeImplantatsystemeAsync();
             _implantatsysteme.AddRange(loadedSystems);
@@ -347,22 +305,6 @@ namespace ArbeitInventur
             }
         }
 
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-            textBoxSystemName.Text = dataGridView1.Rows[e.RowIndex].Cells["SystemName"].Value.ToString();
-        }
-
-        private void DataGridView2_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-            var row = dataGridView2.Rows[e.RowIndex];
-            textBoxKategorie.Text = row.Cells["Kategorie"].Value?.ToString() ?? "";
-            textBoxBeschreibung.Text = row.Cells["Beschreibung"].Value?.ToString() ?? "";
-            textBoxMenge.Text = row.Cells["Menge"].Value?.ToString() ?? "0";
-            textBoxMindestbestand.Text = row.Cells["Mindestbestand"].Value?.ToString() ?? "0";
-        }
-
         private void DataGridView2_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (dataGridView2.Columns[e.ColumnIndex].Name == "Menge" && e.RowIndex >= 0)
@@ -374,6 +316,12 @@ namespace ArbeitInventur
                     e.CellStyle.BackColor = menge < mindestbestand ? Color.Red : dataGridView2.DefaultCellStyle.BackColor;
                     e.CellStyle.ForeColor = menge < mindestbestand ? Color.White : dataGridView2.DefaultCellStyle.ForeColor;
                 }
+            }
+            if (dataGridView2.Columns.Contains("Barcode"))
+            {
+                dataGridView2.Columns["Barcode"].Visible = false;
+                dataGridView2.Columns["ProduktId"].Visible = false;
+                dataGridView2.Columns["Produktionsdatum"].Visible = false;
             }
         }
 
@@ -393,49 +341,10 @@ namespace ArbeitInventur
             if (e.KeyChar == (char)Keys.Enter)
             {
                 string barcode = txtBarcodeInput.Text.Trim();
-                if (IsValidBarcode(barcode))
-                {
-                    ProcessBarcode(barcode);
-                    txtBarcodeInput.Text = "";
-                }
-                else
-                {
-                    MessageBox.Show("Ungültiger QR-Code. Bitte erneut scannen.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    _logHandler.LogAction($"Ungültiger QR-Code gescannt: {barcode}");
-                }
+                ProcessBarcode(barcode);
+                txtBarcodeInput.Text = "";
                 e.Handled = true;
             }
-        }
-
-        private void btn_New_Click(object sender, EventArgs e)
-        {
-            textBoxKategorie.Clear();
-            textBoxBeschreibung.Clear();
-            textBoxMenge.Clear();
-            textBoxMindestbestand.Clear();
-            LogMessage("Felder geleert.");
-        }
-
-        private void btn_SystemNameNew_Click(object sender, EventArgs e)
-        {
-            textBoxSystemName.Clear();
-            LogMessage("Systemname geleert.");
-        }
-
-        private void btn_Minus_Click(object sender, EventArgs e) => AdjustNumericTextBox(textBoxMenge, -1);
-        private void btn_Plus_Click(object sender, EventArgs e) => AdjustNumericTextBox(textBoxMenge, 1);
-        private void btn_MinusMindes_Click(object sender, EventArgs e) => AdjustNumericTextBox(textBoxMindestbestand, -1);
-        private void btn_PlusMindest_Click(object sender, EventArgs e) => AdjustNumericTextBox(textBoxMindestbestand, 1);
-
-        private void AdjustNumericTextBox(TextBox textBox, int change)
-        {
-            if (string.IsNullOrEmpty(textBox.Text)) textBox.Text = "0";
-            if (int.TryParse(textBox.Text, out int value))
-            {
-                value = Math.Max(0, value + change);
-                textBox.Text = value.ToString();
-            }
-            LogMessage($"TextBox {textBox.Name} angepasst: {textBox.Text}");
         }
 
         private void button6_Click(object sender, EventArgs e)
@@ -443,14 +352,12 @@ namespace ArbeitInventur
             panelMain.Controls.Clear();
             var ucSettings = new Uc_Settings { Dock = DockStyle.Fill };
             panelMain.Controls.Add(ucSettings);
-            LogMessage("Einstellungen geöffnet.");
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
             panelMain.Controls.Clear();
             panelMain.Controls.AddRange(_originalControls);
-            LogMessage("Einlagern zurückgesetzt.");
         }
 
         private void btn_Chat_Click(object sender, EventArgs e)
@@ -458,7 +365,6 @@ namespace ArbeitInventur
             panelMain.Controls.Clear();
             var ucChat = new UC_Chatcs(_benutzer) { Dock = DockStyle.Fill };
             panelMain.Controls.Add(ucChat);
-            LogMessage("Pinwand geöffnet.");
         }
 
         private async void btn_UC_Übersicht_Click(object sender, EventArgs e)
@@ -474,7 +380,6 @@ namespace ArbeitInventur
             {
                 Übersicht.instanze.BringToFront();
             }
-            LogMessage("Übersicht geöffnet.");
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -482,7 +387,6 @@ namespace ArbeitInventur
             panelMain.Controls.Clear();
             var ucHistory = new UC_History(_benutzer) { Dock = DockStyle.Fill };
             panelMain.Controls.Add(ucHistory);
-            LogMessage("History geöffnet.");
         }
 
         private void btn_Exocad_Click(object sender, EventArgs e)
@@ -490,11 +394,9 @@ namespace ArbeitInventur
             panelMain.Controls.Clear();
             var ucExocad = new UC_Exocad(_logHandler) { Dock = DockStyle.Fill };
             panelMain.Controls.Add(ucExocad);
-            LogMessage("Exocad geöffnet.");
         }
 
-        // Button1: Produkt hinzufügen oder bearbeiten
-        private async void button1_Click(object sender, EventArgs e)
+        private async void button1_Click_1(object sender, EventArgs e)
         {
             if (dataGridView1.CurrentRow == null)
             {
@@ -518,8 +420,7 @@ namespace ArbeitInventur
                 product = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == beschreibung);
             }
 
-            // Öffne AddProductForm ohne Barcode-Daten, da dies manuelles Hinzufügen/Bearbeiten ist
-            using (var addForm = new AddProductForm(null, null, null, null, _implantatsysteme, _produktManager, _logHandler))
+            using (var addForm = new AddProductForm(null, null, null, null, _implantatsysteme, _produktManager, _logHandler, "Neues Produkt erstellen",true))
             {
                 if (addForm.ShowDialog() == DialogResult.OK)
                 {
@@ -531,31 +432,53 @@ namespace ArbeitInventur
             }
         }
 
-        // Button2: Neues System hinzufügen
-        private async void button2_Click(object sender, EventArgs e)
+        private void btn_RefreshHistory_Click(object sender, EventArgs e)
         {
-            string newSystemName = textBoxSystemName.Text.Trim();
-            if (string.IsNullOrEmpty(newSystemName))
+            var ucHistory = panelMain.Controls.OfType<UC_History>().FirstOrDefault();
+            if (ucHistory != null)
             {
-                MessageBox.Show("Bitte geben Sie einen Systemnamen ein.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                ucHistory.RefreshHistory();
             }
-
-            if (_implantatsysteme.Any(s => s.SystemName == newSystemName))
-            {
-                MessageBox.Show("Ein System mit diesem Namen existiert bereits.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var newSystem = new ProduktFirma { SystemName = newSystemName, Details = new List<ProduktDetail>() };
-            _implantatsysteme.Add(newSystem);
-            await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
-            dataGridView1.DataSource = _implantatsysteme.Select(s => new { s.SystemName }).ToList();
-            LogMessage($"Neues System hinzugefügt: {newSystemName}");
         }
 
-        // Button3: Produkt löschen
-        private async void button3_Click(object sender, EventArgs e)
+        private async void ContextMenuEdit_Click(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentRow == null || dataGridView2.CurrentRow == null)
+            {
+                MessageBox.Show("Bitte wählen Sie ein System und ein Produkt aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string selectedSystemName = dataGridView1.CurrentRow.Cells["SystemName"].Value.ToString();
+            var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == selectedSystemName);
+
+            if (selectedSystem == null)
+            {
+                MessageBox.Show("Das ausgewählte System konnte nicht gefunden werden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Produkt direkt über DataBoundItem auswählen, um Eindeutigkeit zu gewährleisten
+            var productToEdit = (ProduktDetail)dataGridView2.CurrentRow.DataBoundItem;
+            if (productToEdit == null)
+            {
+                MessageBox.Show("Das ausgewählte Produkt konnte nicht gefunden werden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using (var addForm = new AddProductForm(productToEdit.Barcode, productToEdit.ProduktId, productToEdit.Produktionsdatum, productToEdit.LotNummer, _implantatsysteme, _produktManager, _logHandler, "Produkt Bearbeiten", false))
+            {
+                if (addForm.ShowDialog() == DialogResult.OK)
+                {
+                    UpdateBarcodeIndex();
+                    UpdateDataGridViews(addForm.SelectedSystem, addForm.AddedProduct);
+                    await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
+                    LogMessage($"Produkt bearbeitet: {addForm.AddedProduct.Beschreibung}");
+                }
+            }
+        }
+
+        private async void ContextMenuDelete_Click(object sender, EventArgs e)
         {
             if (dataGridView1.CurrentRow == null || dataGridView2.CurrentRow == null)
             {
@@ -573,50 +496,24 @@ namespace ArbeitInventur
             }
 
             string beschreibung = dataGridView2.CurrentRow.Cells["Beschreibung"].Value.ToString();
-            var product = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == beschreibung);
+            var selectedProduct = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == beschreibung);
 
-            if (product == null)
+            if (selectedProduct == null)
             {
                 MessageBox.Show("Das ausgewählte Produkt konnte nicht gefunden werden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            if (MessageBox.Show($"Möchten Sie das Produkt '{beschreibung}' wirklich löschen?", "Bestätigung", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            var result = MessageBox.Show($"Möchten Sie das Produkt '{selectedProduct.Beschreibung}' wirklich löschen?", "Bestätigung", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (result == DialogResult.Yes)
             {
-                selectedSystem.Details.Remove(product);
-                await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
+                selectedSystem.Details.Remove(selectedProduct);
                 UpdateBarcodeIndex();
-                dataGridView2.DataSource = selectedSystem.Details?.ToList() ?? new List<ProduktDetail>();
-                LogMessage($"Produkt gelöscht: {beschreibung}");
-            }
-        }
-
-        // ButtonSystemDelete (button5): System löschen
-        private async void button5_Click(object sender, EventArgs e)
-        {
-            if (dataGridView1.CurrentRow == null)
-            {
-                MessageBox.Show("Bitte wählen Sie ein System aus.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            string selectedSystemName = dataGridView1.CurrentRow.Cells["SystemName"].Value.ToString();
-            var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == selectedSystemName);
-
-            if (selectedSystem == null)
-            {
-                MessageBox.Show("Das ausgewählte System konnte nicht gefunden werden.", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (MessageBox.Show($"Möchten Sie das System '{selectedSystemName}' und alle zugehörigen Produkte wirklich löschen?", "Bestätigung", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                _implantatsysteme.Remove(selectedSystem);
-                await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
-                UpdateBarcodeIndex();
-                dataGridView1.DataSource = _implantatsysteme.Select(s => new { s.SystemName }).ToList();
                 dataGridView2.DataSource = null;
-                LogMessage($"System gelöscht: {selectedSystemName}");
+                dataGridView2.DataSource = selectedSystem.Details?.ToList() ?? new List<ProduktDetail>();
+                await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
+                LogMessage($"Produkt gelöscht: {selectedProduct.Beschreibung}");
+                MessageBox.Show("Produkt erfolgreich gelöscht.", "Erfolg", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -728,6 +625,7 @@ namespace ArbeitInventur
             _serverWatcher?.StopWatching();
             _serverWatcher?.Dispose();
             _notifyIcon?.Dispose();
+            _contextMenuStrip?.Dispose();
             _disposed = true;
             base.Dispose();
         }
@@ -736,7 +634,6 @@ namespace ArbeitInventur
         {
             Dispose();
             Application.Exit();
-            LogMessage("Formular geschlossen.");
         }
 
         #endregion
