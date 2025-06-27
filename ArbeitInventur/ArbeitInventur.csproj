@@ -161,7 +161,7 @@
     <Compile Include="UC_History.Designer.cs">
       <DependentUpon>UC_History.cs</DependentUpon>
     </Compile>
-    <Compile Include="Produkt\ProkuktManager.cs" />
+    <Compile Include="Produkt\ProduktManager.cs" />
     <Compile Include="Produkt\ProduktFirma.cs" />
     <Compile Include="JsonDateiÜberwacher.cs" />
     <Compile Include="LogHandler.cs" />
