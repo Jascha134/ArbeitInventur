@@ -17,8 +17,6 @@ namespace ArbeitInventur
         private FolderWatcherAndUploader _folderUploader;
         private LogHandler _logHandler;
         private bool disposed = false;
-        private bool _dentalCadWatcherActive = false;
-        private bool _folderUploaderActive = false;
 
         public UC_Exocad(LogHandler logHandler)
         {
