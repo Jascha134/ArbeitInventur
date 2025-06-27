@@ -118,7 +118,7 @@ namespace ArbeitInventur
                 _folderUploader.StopWatching();
                 _folderUploader.Dispose();
                 _folderUploader = null;
-                AddToListBox("Überwachung von Ordner-Upload gestartet.");
+                AddToListBox("Überwachung von Ordner-Upload gestoppt.");
             }
             else if (chk_FolderUploader.Checked == true)
             {
@@ -133,7 +133,7 @@ namespace ArbeitInventur
                 _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder, _logHandler);
                 _folderUploader.FolderUploaded += OnFolderUploaded;
                 _folderUploader.StartWatching();
-                AddToListBox("Überwachung von Ordner-Upload gestoppt.");
+                AddToListBox("Überwachung von Ordner-Upload gestartet.");
             }
         }
 
