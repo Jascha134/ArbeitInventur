@@ -22,7 +22,7 @@ namespace ArbeitInventur
             labelError.Text = "";
 
             errorTimer = new Timer();
-            errorTimer.Interval = 1500; // 2 Sekunden (2000 Millisekunden)
+            errorTimer.Interval = 2000; // 2 Sekunden (2000 Millisekunden)
             errorTimer.Tick += ErrorTimer_Tick;
 
             this.KeyPreview = true;
