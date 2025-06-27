@@ -43,7 +43,7 @@ namespace ArbeitInventur
             if (!File.Exists(_implantatsystemePfad))
                 return new List<ProduktFirma>();
 
-            var json = File.ReadAllText(_implantatsystemePfad);
+            var json = await FileAsyncHelper.ReadAllTextAsync(_implantatsystemePfad);
             var systems = JsonConvert.DeserializeObject<List<ProduktFirma>>(json) ?? new List<ProduktFirma>();
 
             // Migration für bestehende Produkte ohne ID
@@ -72,7 +72,7 @@ namespace ArbeitInventur
         public async Task SpeichereImplantatsystemeAsync(List<ProduktFirma> implantatsysteme)
         {
             var json = JsonConvert.SerializeObject(implantatsysteme, Formatting.Indented);
-            File.WriteAllText(_implantatsystemePfad, json);
+            await FileAsyncHelper.WriteAllTextAsync(_implantatsystemePfad, json);
         }
 
         public int GenerateProductId(ProduktFirma firma)
