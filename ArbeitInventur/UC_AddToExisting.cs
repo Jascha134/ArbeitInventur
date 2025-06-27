@@ -25,26 +25,36 @@ namespace ArbeitInventur.Formes
             cbSystems.SelectedIndexChanged += (s, e) => UpdateProductsComboBox();
             UpdateProductsComboBox();
         }
+        public void SelectProductById(int productId)
+        {
+            var selectedSystemName = cbSystems.SelectedItem?.ToString();
+            if (selectedSystemName == null) return;
+            var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == selectedSystemName);
+            if (selectedSystem == null) return;
+            var filteredDetails = selectedSystem.Details
+                .Where(d => d != null && !string.IsNullOrEmpty(d.Beschreibung))
+                .ToList();
+            int index = filteredDetails.FindIndex(d => d.Id == productId);
+            if (index >= 0)
+            {
+                cbProducts.SelectedIndex = index;
+            }
+        }
 
         public void UpdateProductsComboBox()
         {
             cbProducts.Items.Clear();
-
-            if (_implantatsysteme == null || !_implantatsysteme.Any() || cbSystems.SelectedIndex < 0)
-                return;
-
-            var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == cbSystems.SelectedItem?.ToString());
-            if (selectedSystem?.Details == null)
-                return;
-
-            var validDescriptions = selectedSystem.Details
+            var selectedSystemName = cbSystems.SelectedItem?.ToString();
+            if (selectedSystemName == null) return;
+            var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == selectedSystemName);
+            if (selectedSystem == null) return;
+            var validDetails = selectedSystem.Details
                 .Where(d => d != null && !string.IsNullOrEmpty(d.Beschreibung))
-                .Select(d => d.Beschreibung)
-                .ToArray();
-
-            cbProducts.Items.AddRange(validDescriptions);
-            if (cbProducts.Items.Count > 0)
-                cbProducts.SelectedIndex = 0;
+                .ToList();
+            foreach (var detail in validDetails)
+            {
+                cbProducts.Items.Add($"{detail.Beschreibung} (ID: {detail.Id})");
+            }
         }
     }
 }

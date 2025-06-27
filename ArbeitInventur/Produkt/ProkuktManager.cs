@@ -9,64 +9,83 @@ namespace ArbeitInventur
 {
     public class ProduktManager
     {
-        private readonly string dateiPfad;
-        private List<ProduktFirma> cachedSystems;
+        private readonly string _implantatsystemePfad;
+        private readonly Dictionary<string, int> _firmaStartNumbers = new Dictionary<string, int>();
+        private const int START_NUMBER_INCREMENT = 10;
 
-        public ProduktManager(string pfad = null)
+        public ProduktManager()
         {
-            dateiPfad = pfad ?? Path.Combine(Properties.Settings.Default.DataJSON, "implantatsysteme.json");
-            cachedSystems = null;
+            _implantatsystemePfad = Path.Combine(Properties.Settings.Default.DataJSON, "implantatsysteme.json");
+            LoadFirmaStartNumbers();
         }
 
-        public Task<List<T>> LadeDatenAsync<T>()
+        private void LoadFirmaStartNumbers()
         {
-            return Task.Run(() =>
+            if (File.Exists(_implantatsystemePfad))
             {
-                if (!File.Exists(dateiPfad)) return new List<T>();
-
-                try
+                var json = File.ReadAllText(_implantatsystemePfad);
+                var systems = JsonConvert.DeserializeObject<List<ProduktFirma>>(json);
+                if (systems != null)
                 {
-                    string json = File.ReadAllText(dateiPfad);
-                    return JsonConvert.DeserializeObject<List<T>>(json) ?? new List<T>();
+                    foreach (var system in systems)
+                    {
+                        if (!_firmaStartNumbers.ContainsKey(system.SystemName))
+                        {
+                            _firmaStartNumbers[system.SystemName] = system.IdStartNumber;
+                        }
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Laden der Daten: {ex.Message}");
-                    return new List<T>();
-                }
-            });
-        }
-
-        public Task SpeichereDatenAsync<T>(List<T> daten)
-        {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    string json = JsonConvert.SerializeObject(daten, Formatting.Indented);
-                    File.WriteAllText(dateiPfad, json);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Speichern der Daten: {ex.Message}");
-                }
-            });
+            }
         }
 
         public async Task<List<ProduktFirma>> LadeImplantatsystemeAsync()
         {
-            if (cachedSystems != null)
+            if (!File.Exists(_implantatsystemePfad))
+                return new List<ProduktFirma>();
+
+            var json = File.ReadAllText(_implantatsystemePfad);
+            var systems = JsonConvert.DeserializeObject<List<ProduktFirma>>(json) ?? new List<ProduktFirma>();
+
+            // Migration für bestehende Produkte ohne ID
+            foreach (var system in systems)
             {
-                return cachedSystems;
+                if (!_firmaStartNumbers.ContainsKey(system.SystemName))
+                {
+                    int nextStartNumber = _firmaStartNumbers.Values.DefaultIfEmpty(0).Max() + START_NUMBER_INCREMENT;
+                    _firmaStartNumbers[system.SystemName] = nextStartNumber;
+                    system.IdStartNumber = nextStartNumber;
+                }
+
+                if (system.Details != null)
+                {
+                    int nextId = system.IdStartNumber;
+                    foreach (var product in system.Details.Where(p => p.Id == 0))
+                    {
+                        product.Id = nextId++;
+                    }
+                }
             }
-            cachedSystems = await LadeDatenAsync<ProduktFirma>();
-            return cachedSystems;
+
+            return systems;
         }
 
         public async Task SpeichereImplantatsystemeAsync(List<ProduktFirma> implantatsysteme)
         {
-            cachedSystems = implantatsysteme;
-            await SpeichereDatenAsync(implantatsysteme);
+            var json = JsonConvert.SerializeObject(implantatsysteme, Formatting.Indented);
+            File.WriteAllText(_implantatsystemePfad, json);
+        }
+
+        public int GenerateProductId(ProduktFirma firma)
+        {
+            if (!_firmaStartNumbers.ContainsKey(firma.SystemName))
+            {
+                int nextStartNumber = _firmaStartNumbers.Values.DefaultIfEmpty(0).Max() + START_NUMBER_INCREMENT;
+                _firmaStartNumbers[firma.SystemName] = nextStartNumber;
+                firma.IdStartNumber = nextStartNumber;
+            }
+
+            int maxId = firma.Details?.Select(d => d.Id).DefaultIfEmpty(firma.IdStartNumber - 1).Max() ?? (firma.IdStartNumber - 1);
+            return maxId + 1;
         }
     }
 }

@@ -83,6 +83,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formes\BestellungForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\BestellungForm.Designer.cs">
+      <DependentUpon>BestellungForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formes\ErrorStart.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formes\ErrorStart.Designer.cs">
+      <DependentUpon>ErrorStart.cs</DependentUpon>
+    </Compile>
     <Compile Include="Produkt\ProduktDetail.cs" />
     <Compile Include="Exocad_Help\DentalCadFileWatcher.cs" />
     <Compile Include="Exocad_Help\FolderWatcherAndUploader.cs" />
@@ -171,6 +183,12 @@
     <Compile Include="UserInterface\PasswortHashing.cs" />
     <EmbeddedResource Include="Formes\AddProductForm.resx">
       <DependentUpon>AddProductForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formes\BestellungForm.resx">
+      <DependentUpon>BestellungForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Formes\ErrorStart.resx">
+      <DependentUpon>ErrorStart.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Formes\InventoryActionForm.resx">
       <DependentUpon>InventoryActionForm.cs</DependentUpon>

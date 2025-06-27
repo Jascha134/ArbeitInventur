@@ -33,6 +33,7 @@
             this.textBoxSuche = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.checkBox_MinOrders = new System.Windows.Forms.CheckBox();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewOverview)).BeginInit();
             this.SuspendLayout();
             // 
@@ -47,8 +48,6 @@
             this.dataGridViewOverview.Name = "dataGridViewOverview";
             this.dataGridViewOverview.Size = new System.Drawing.Size(1164, 607);
             this.dataGridViewOverview.TabIndex = 0;
-            this.dataGridViewOverview.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewOverview_CellClick);
-            this.dataGridViewOverview.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridViewOverview_CellFormatting);
             // 
             // textBoxSuche
             // 
@@ -79,13 +78,22 @@
             this.checkBox_MinOrders.TabIndex = 3;
             this.checkBox_MinOrders.Text = "Mindestbestand unterschritten";
             this.checkBox_MinOrders.UseVisualStyleBackColor = true;
-            this.checkBox_MinOrders.CheckedChanged += new System.EventHandler(this.checkBox_MinOrders_CheckedChanged);
             // 
-            // Form2
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(1052, 57);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(130, 37);
+            this.button1.TabIndex = 4;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // Übersicht
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1200, 727);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.checkBox_MinOrders);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBoxSuche);
@@ -93,11 +101,9 @@
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "Form2";
+            this.Name = "Übersicht";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Übersicht";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form2_FormClosed);
-            this.Load += new System.EventHandler(this.Form2_Load);
+            this.Text = "Bestellübersicht";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewOverview)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -110,5 +116,6 @@
         private System.Windows.Forms.TextBox textBoxSuche;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkBox_MinOrders;
+        private System.Windows.Forms.Button button1;
     }
 }

@@ -106,7 +106,7 @@ namespace ArbeitInventur.Exocad_Help
                 await Task.Run(() => File.Copy(filePath, destinationPath, true), cancellationToken);
 
                 // Angepasste Nachricht mit zusätzlichen Details
-                string message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Datei '{fileName}' (Pfad: {filePath}) wurde in den Zielordner '{destinationPath}' kopiert ({action}).";
+                string message = $"Datei: {fileName} wurde in den Zielordner '{destinationPath}' kopiert ({action}).";
                 ProcessSuccess(filePath, message, action);
             }
             catch (Exception ex)

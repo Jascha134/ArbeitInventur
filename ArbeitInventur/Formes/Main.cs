@@ -1,5 +1,4 @@
-﻿using ArbeitInventur.Barcode;
-using ArbeitInventur.Exocad_Help;
+﻿using ArbeitInventur.Exocad_Help;
 using ArbeitInventur.Formes;
 using Newtonsoft.Json;
 using System;
@@ -42,23 +41,30 @@ namespace ArbeitInventur
             // Validierung des DataJSON-Pfads
             if (!Directory.Exists(Properties.Settings.Default.DataJSON))
             {
+
                 Directory.CreateDirectory(Properties.Settings.Default.DataJSON);
             }
+            _implantatsystemePfad = Path.Combine(Properties.Settings.Default.DataJSON, "implantatsysteme.json");
+            _logPfad = Path.Combine(Properties.Settings.Default.DataJSON, "log.json");
+            _logHandler = new LogHandler(_logPfad, _benutzer);
 
+            if (Directory.Exists(Properties.Settings.Default.ExocadConstructions)
+                && Directory.Exists(Properties.Settings.Default.ServerTargetFolder)
+                && Directory.Exists(Properties.Settings.Default.ExocaddentalCAD)
+                && Directory.Exists(Properties.Settings.Default.LocalScanFolder))
+            {
+                _fileWatcher = new DentalCadFileWatcher(_logHandler, TimeSpan.FromSeconds(30), 10);
+                _serverWatcher = new FolderWatcherAndUploader(
+                    Properties.Settings.Default.LocalScanFolder,
+                    Properties.Settings.Default.ServerTargetFolder,
+                    _logHandler);
+                InitializeFileWatchers();
+            }
             InitializeComponent();
             _produktManager = new ProduktManager();
             _implantatsysteme = new List<ProduktFirma>();
             _barcodeIndex = new Dictionary<string, (ProduktFirma, ProduktDetail)>();
 
-            _implantatsystemePfad = Path.Combine(Properties.Settings.Default.DataJSON, "implantatsysteme.json");
-            _logPfad = Path.Combine(Properties.Settings.Default.DataJSON, "log.json");
-            _logHandler = new LogHandler(_logPfad, _benutzer);
-
-            _fileWatcher = new DentalCadFileWatcher(_logHandler, TimeSpan.FromSeconds(30), 10);
-            _serverWatcher = new FolderWatcherAndUploader(
-                Properties.Settings.Default.ServerTargetFolder,
-                Properties.Settings.Default.ExocadConstructions,
-                _logHandler);
             _notifyIcon = new NotifyIcon
             {
                 Icon = SystemIcons.Information,
@@ -66,25 +72,29 @@ namespace ArbeitInventur
                 Text = "ArbeitInventur"
             };
 
-            InitializeFileWatchers();
             InitializeUI();
             InitializeContextMenu();
             UpdateBarcodeIndex();
 
             CheckAndTransferPendingFolders(
-                Properties.Settings.Default.ServerTargetFolder,
-                Properties.Settings.Default.ExocadConstructions);
+                Properties.Settings.Default.LocalScanFolder,
+                Properties.Settings.Default.ServerTargetFolder);
         }
 
         #region Initialisierung
 
         private void InitializeFileWatchers()
         {
-            _fileWatcher.FileHandled += (message) => _logHandler.LogAction(message);
-            _fileWatcher.StartWatching();
-
-            _serverWatcher.FolderUploaded += OnServerFolderDetected;
-            _serverWatcher.StartWatching();
+            if(Properties.Settings.Default.EnableDentalCadWatcher == true)
+            {
+                _fileWatcher.FileHandled += (message) => _logHandler.LogAction(message);
+                _fileWatcher.StartWatching();
+            }
+            if(Properties.Settings.Default.EnableFolderUploader == true)
+            {
+                _serverWatcher.FolderUploaded += OnServerFolderDetected;
+                _serverWatcher.StartWatching();
+            }
         }
 
         private void InitializeUI()
@@ -241,7 +251,7 @@ namespace ArbeitInventur
                         {
                             UpdateBarcodeIndex();
                             UpdateDataGridViews(addForm.SelectedSystem, addForm.AddedProduct);
-                            MessageBox.Show("Produkt erfolgreich hinzugefügt.", "Erfolg", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                             _logHandler.LogAction($"Produkt hinzugefügt: {addForm.AddedProduct.Beschreibung}, Barcode: {barcodeId}, Lot: {lotNummer}");
                         }
                         else
@@ -301,6 +311,11 @@ namespace ArbeitInventur
                 dataGridView2.SuspendLayout();
                 dataGridView2.DataSource = null;
                 dataGridView2.DataSource = selectedSystem.Details?.ToList() ?? new List<ProduktDetail>();
+                // Id-Spalte ausblenden
+                if (dataGridView2.Columns.Contains("Id"))
+                {
+                    dataGridView2.Columns["Id"].Visible = false;
+                }
                 dataGridView2.ResumeLayout();
             }
         }
@@ -322,6 +337,12 @@ namespace ArbeitInventur
                 dataGridView2.Columns["Barcode"].Visible = false;
                 dataGridView2.Columns["ProduktId"].Visible = false;
                 dataGridView2.Columns["Produktionsdatum"].Visible = false;
+                dataGridView2.Columns["Lotnummer"].Visible = false;
+            }
+            // Id-Spalte ausblenden
+            if (dataGridView2.Columns.Contains("Id"))
+            {
+                dataGridView2.Columns["Id"].Visible = false;
             }
         }
 
@@ -458,7 +479,6 @@ namespace ArbeitInventur
                 return;
             }
 
-            // Produkt direkt über DataBoundItem auswählen, um Eindeutigkeit zu gewährleisten
             var productToEdit = (ProduktDetail)dataGridView2.CurrentRow.DataBoundItem;
             if (productToEdit == null)
             {
@@ -466,14 +486,25 @@ namespace ArbeitInventur
                 return;
             }
 
-            using (var addForm = new AddProductForm(productToEdit.Barcode, productToEdit.ProduktId, productToEdit.Produktionsdatum, productToEdit.LotNummer, _implantatsysteme, _produktManager, _logHandler, "Produkt Bearbeiten", false))
+            using (var addForm = new AddProductForm(
+                productToEdit.Barcode,
+                productToEdit.ProduktId,
+                productToEdit.Produktionsdatum,
+                productToEdit.LotNummer,
+                _implantatsysteme,
+                _produktManager,
+                _logHandler,
+                "Produkt Bearbeiten",
+                false,
+                productToEdit.Id,
+                selectedSystem.SystemName)) // Füge Systemnamen hinzu
             {
                 if (addForm.ShowDialog() == DialogResult.OK)
                 {
                     UpdateBarcodeIndex();
                     UpdateDataGridViews(addForm.SelectedSystem, addForm.AddedProduct);
                     await _produktManager.SpeichereImplantatsystemeAsync(_implantatsysteme);
-                    LogMessage($"Produkt bearbeitet: {addForm.AddedProduct.Beschreibung}");
+                    LogMessage($"Produkt bearbeitet: {addForm.AddedProduct.Beschreibung} (ID: {addForm.AddedProduct.Id})");
                 }
             }
         }
@@ -590,6 +621,12 @@ namespace ArbeitInventur
             {
                 dataGridView1.Rows[rowIndex].Selected = true;
                 dataGridView2.DataSource = selectedSystem.Details?.ToList() ?? new List<ProduktDetail>();
+
+                // Id-Spalte ausblenden
+                if (dataGridView2.Columns.Contains("Id"))
+                {
+                    dataGridView2.Columns["Id"].Visible = false;
+                }
 
                 int detailRowIndex = dataGridView2.Rows.Cast<DataGridViewRow>()
                     .FirstOrDefault(r => r.Cells["Beschreibung"].Value.ToString() == matchingProduct.Beschreibung)?.Index ?? -1;

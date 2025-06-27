@@ -1,5 +1,4 @@
-﻿using ArbeitInventur.Barcode;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,19 +14,23 @@ namespace ArbeitInventur.Formes
         private readonly string _produktId;
         private readonly DateTime? _produktionsdatum;
         private readonly string _lotNummer;
+        private readonly int? _productId;
+        private readonly string _systemName;
         private UC_AddToExisting _ucAddToExisting;
         private UC_CreateNew _ucCreateNew;
 
         public ProduktDetail AddedProduct { get; private set; }
         public ProduktFirma SelectedSystem { get; private set; }
 
-        public AddProductForm(string barcode, string produktId, DateTime? produktionsdatum, string lotNummer, List<ProduktFirma> implantatsysteme, ProduktManager manager, LogHandler logHandler, string rbCreateNewName, bool rbAddToExistingEnable)
+        public AddProductForm(string barcode, string produktId, DateTime? produktionsdatum, string lotNummer, List<ProduktFirma> implantatsysteme, ProduktManager manager, LogHandler logHandler, string rbCreateNewName, bool rbAddToExistingEnable, int? productId = null, string systemName = null)
         {
             InitializeComponent();
             _barcode = barcode;
             _produktId = produktId;
             _produktionsdatum = produktionsdatum;
             _lotNummer = lotNummer;
+            _productId = productId;
+            _systemName = systemName;
             _implantatsysteme = implantatsysteme ?? new List<ProduktFirma>();
             _manager = manager;
             _logHandler = logHandler;
@@ -48,56 +51,35 @@ namespace ArbeitInventur.Formes
             _ucAddToExisting = new UC_AddToExisting(_implantatsysteme) { Dock = DockStyle.Fill };
             _ucCreateNew = new UC_CreateNew(_implantatsysteme) { Dock = DockStyle.Fill };
 
-            // Vorhandenes Produkt vorfüllen, basierend auf dem übergebenen Produkt
-            if (!rbAddToExistingEnable) // Bearbeitungsmodus
+            if (_productId.HasValue && _systemName != null)
             {
-                // Im Bearbeitungsmodus suchen wir das Produkt direkt über die übergebenen Werte
-                var existingProduct = _implantatsysteme
-                    .SelectMany(s => s.Details)
-                    .FirstOrDefault(d =>
-                        (d.Barcode == barcode || (string.IsNullOrEmpty(barcode) && string.IsNullOrEmpty(d.Barcode))) &&
-                        (d.LotNummer == lotNummer || (string.IsNullOrEmpty(lotNummer) && string.IsNullOrEmpty(d.LotNummer))) &&
-                        d.ProduktId == produktId &&
-                        d.Produktionsdatum == produktionsdatum);
-
-                if (existingProduct != null)
+                var selectedSystem = _implantatsysteme.FirstOrDefault(s => s.SystemName == _systemName);
+                if (selectedSystem != null)
                 {
-                    var system = _implantatsysteme.FirstOrDefault(s => s.Details.Contains(existingProduct));
-                    if (system != null)
+                    var existingProduct = selectedSystem.Details.FirstOrDefault(d => d.Id == _productId.Value);
+                    if (existingProduct != null)
                     {
-                        // UC_CreateNew initialisieren
-                        _ucCreateNew.TxtBeschreibung.Text = existingProduct.Beschreibung;
-                        _ucCreateNew.TxtMenge.Text = existingProduct.Menge.ToString();
-                        _ucCreateNew.TxtMindestbestand.Text = existingProduct.Mindestbestand.ToString();
-                        if (_ucCreateNew.CbCategories.Items.Contains(existingProduct.Kategorie))
-                        {
-                            _ucCreateNew.CbCategories.SelectedIndex = _ucCreateNew.CbCategories.Items.IndexOf(existingProduct.Kategorie);
-                        }
-                        else
-                        {
-                            _ucCreateNew.ChkNewCategory.Checked = true;
-                            _ucCreateNew.TxtKategorie.Text = existingProduct.Kategorie;
-                        }
-
-                        // Bestehendes System auswählen
-                        if (_ucCreateNew.CbExistingSystems.Items.Contains(system.SystemName))
-                        {
-                            _ucCreateNew.CbExistingSystems.SelectedIndex = _ucCreateNew.CbExistingSystems.Items.IndexOf(system.SystemName);
-                        }
-                        else
-                        {
-                            _ucCreateNew.ChkNewSystem.Checked = true;
-                            _ucCreateNew.TxtNewSystemName.Text = system.SystemName;
-                        }
-
-                        // UC_AddToExisting initialisieren (falls benötigt)
-                        if (rbAddToExistingEnable)
+                        var system = _implantatsysteme.FirstOrDefault(s => s.Details.Contains(existingProduct));
+                        if (system != null)
                         {
                             _ucAddToExisting.CbSystems.SelectedIndex = _ucAddToExisting.CbSystems.Items.IndexOf(system.SystemName);
                             _ucAddToExisting.UpdateProductsComboBox();
-                            if (_ucAddToExisting.CbProducts.Items.Contains(existingProduct.Beschreibung))
+                            _ucAddToExisting.CbProducts.SelectedIndex = _ucAddToExisting.CbProducts.Items.IndexOf(existingProduct.Beschreibung);
+                            _ucCreateNew.TxtBeschreibung.Text = existingProduct.Beschreibung;
+                            _ucCreateNew.TxtMenge.Text = existingProduct.Menge.ToString();
+                            _ucCreateNew.TxtMindestbestand.Text = existingProduct.Mindestbestand.ToString();
+                            if (_ucCreateNew.CbCategories.Items.Contains(existingProduct.Kategorie))
                             {
-                                _ucAddToExisting.CbProducts.SelectedIndex = _ucAddToExisting.CbProducts.Items.IndexOf(existingProduct.Beschreibung);
+                                _ucCreateNew.CbCategories.SelectedIndex = _ucCreateNew.CbCategories.Items.IndexOf(existingProduct.Kategorie);
+                            }
+                            else
+                            {
+                                _ucCreateNew.ChkNewCategory.Checked = true;
+                                _ucCreateNew.TxtKategorie.Text = existingProduct.Kategorie;
+                            }
+                            if (_ucCreateNew.CbExistingSystems.Items.Contains(system.SystemName))
+                            {
+                                _ucCreateNew.CbExistingSystems.SelectedIndex = _ucCreateNew.CbExistingSystems.Items.IndexOf(system.SystemName);
                             }
                         }
                     }
@@ -155,23 +137,21 @@ namespace ArbeitInventur.Formes
                     var selectedProduct = selectedSystem.Details.FirstOrDefault(d => d.Beschreibung == _ucAddToExisting.CbProducts.SelectedItem.ToString());
                     if (selectedProduct != null)
                     {
-                        var existingProduct = selectedSystem.Details.FirstOrDefault(d =>
-                            (d.Barcode == _barcode || (string.IsNullOrEmpty(_barcode) && string.IsNullOrEmpty(d.Barcode))) &&
-                            (d.LotNummer == _lotNummer || (string.IsNullOrEmpty(_lotNummer) && string.IsNullOrEmpty(d.LotNummer))));
+                        var existingProduct = selectedSystem.Details.FirstOrDefault(d => d.Id == _productId);
                         if (existingProduct != null)
                         {
-                            // Produkt aktualisieren
                             existingProduct.Barcode = _barcode;
                             existingProduct.ProduktId = _produktId;
                             existingProduct.Produktionsdatum = _produktionsdatum;
                             existingProduct.LotNummer = _lotNummer;
                             AddedProduct = existingProduct;
-                            _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} im System {selectedSystem.SystemName} aktualisiert.");
+                            _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} (ID: {existingProduct.Id}) im System {selectedSystem.SystemName} aktualisiert.");
                         }
                         else
                         {
                             var newProduct = new ProduktDetail
                             {
+                                Id = _manager.GenerateProductId(selectedSystem),
                                 Kategorie = selectedProduct.Kategorie,
                                 Beschreibung = selectedProduct.Beschreibung,
                                 Menge = 1,
@@ -183,7 +163,7 @@ namespace ArbeitInventur.Formes
                             };
                             selectedSystem.Details.Add(newProduct);
                             AddedProduct = newProduct;
-                            _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} und Lot-Nummer {_lotNummer} im System {selectedSystem.SystemName} erstellt.");
+                            _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} (ID: {newProduct.Id}) mit QR-Code {_barcode} im System {selectedSystem.SystemName} erstellt.");
                         }
                         SelectedSystem = selectedSystem;
                     }
@@ -239,15 +219,11 @@ namespace ArbeitInventur.Formes
                     return;
                 }
 
-                // Prüfen, ob ein bestehendes Produkt im Bearbeitungsmodus aktualisiert werden soll
-                if (!rbAddToExisting.Enabled)
+                if (_productId.HasValue)
                 {
-                    var existingProduct = SelectedSystem.Details?.FirstOrDefault(d =>
-                        (d.Barcode == _barcode || (string.IsNullOrEmpty(_barcode) && string.IsNullOrEmpty(d.Barcode))) &&
-                        (d.LotNummer == _lotNummer || (string.IsNullOrEmpty(_lotNummer) && string.IsNullOrEmpty(d.LotNummer))));
+                    var existingProduct = SelectedSystem.Details?.FirstOrDefault(d => d.Id == _productId.Value);
                     if (existingProduct != null)
                     {
-                        // Bestehendes Produkt aktualisieren
                         existingProduct.Kategorie = category;
                         existingProduct.Beschreibung = _ucCreateNew.TxtBeschreibung.Text;
                         existingProduct.Menge = menge;
@@ -257,35 +233,14 @@ namespace ArbeitInventur.Formes
                         existingProduct.Produktionsdatum = _produktionsdatum;
                         existingProduct.LotNummer = _lotNummer;
                         AddedProduct = existingProduct;
-                        _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} im System {SelectedSystem.SystemName} aktualisiert.");
-                    }
-                    else
-                    {
-                        // Neues Produkt erstellen
-                        var newProduct = new ProduktDetail
-                        {
-                            Kategorie = category,
-                            Beschreibung = _ucCreateNew.TxtBeschreibung.Text,
-                            Menge = menge,
-                            Mindestbestand = mindestbestand,
-                            Barcode = _barcode,
-                            ProduktId = _produktId,
-                            Produktionsdatum = _produktionsdatum,
-                            LotNummer = _lotNummer
-                        };
-                        if (SelectedSystem.Details == null)
-                        {
-                            SelectedSystem.Details = new List<ProduktDetail>();
-                        }
-                        SelectedSystem.Details.Add(newProduct);
-                        AddedProduct = newProduct;
-                        _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} im System {SelectedSystem.SystemName} erstellt.");
+                        _logHandler.LogAction($"Produkt {existingProduct.Beschreibung} (ID: {existingProduct.Id}) im System {SelectedSystem.SystemName} aktualisiert.");
                     }
                 }
                 else
                 {
                     var newProduct = new ProduktDetail
                     {
+                        Id = _manager.GenerateProductId(SelectedSystem),
                         Kategorie = category,
                         Beschreibung = _ucCreateNew.TxtBeschreibung.Text,
                         Menge = menge,
@@ -301,7 +256,7 @@ namespace ArbeitInventur.Formes
                     }
                     SelectedSystem.Details.Add(newProduct);
                     AddedProduct = newProduct;
-                    _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} mit QR-Code {_barcode} im System {SelectedSystem.SystemName} erstellt.");
+                    _logHandler.LogAction($"Neues Produkt {newProduct.Beschreibung} (ID: {newProduct.Id}) mit QR-Code {_barcode} im System {SelectedSystem.SystemName} erstellt.");
                 }
             }
 
@@ -312,7 +267,8 @@ namespace ArbeitInventur.Formes
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
     }
 }

@@ -34,6 +34,9 @@
             // 
             // listBoxTimestamp
             // 
+            this.listBoxTimestamp.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxTimestamp.FormattingEnabled = true;
             this.listBoxTimestamp.ItemHeight = 20;
             this.listBoxTimestamp.Location = new System.Drawing.Point(3, 16);
@@ -43,6 +46,9 @@
             // 
             // listBoxActions
             // 
+            this.listBoxActions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxActions.FormattingEnabled = true;
             this.listBoxActions.ItemHeight = 20;
             this.listBoxActions.Location = new System.Drawing.Point(268, 16);

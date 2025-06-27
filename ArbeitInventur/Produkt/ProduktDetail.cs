@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace ArbeitInventur.Barcode
+namespace ArbeitInventur
 {
     public class ProduktDetail
     {
-        public int Id { get; set; } // Eindeutige ID
+        public int Id { get; set; } // Eindeutige ID für das Produkt
         public string Kategorie { get; set; }
         public string Beschreibung { get; set; }
         public int Menge { get; set; }

@@ -4,6 +4,7 @@ using ArbeitInventur.UserInterface;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -26,6 +27,14 @@ namespace ArbeitInventur
 
             this.KeyPreview = true;
             this.KeyDown += new KeyEventHandler(Login_KeyDown);
+
+            string check = Properties.Settings.Default.DataJSON;
+            if(!Directory.Exists(check))
+            {
+                // Wenn der Pfad leer ist, zeige den Fehlerdialog an
+                ErrorStart errorStartForm = new ErrorStart();
+                errorStartForm.ShowDialog();
+            }
 
             benutzerVerwaltung = new BenutzerVerwaltung();
             benutzerVerwaltung.DatenLaden();

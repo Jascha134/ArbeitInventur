@@ -1,13 +1,18 @@
 ﻿using ArbeitInventur.Exocad_Help;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ArbeitInventur
 {
     public partial class UC_Exocad : UserControl, IDisposable
     {
+
+        private readonly HashSet<string> _loadedLogEntries = new HashSet<string>();
+        private bool IsUiReady() => IsHandleCreated && !IsDisposed;
+
         private DentalCadFileWatcher _fileWatcher;
         private FolderWatcherAndUploader _folderUploader;
         private LogHandler _logHandler;
@@ -34,8 +39,49 @@ namespace ArbeitInventur
 
         private void UC_Exocad_Load(object sender, EventArgs e)
         {
+            // Lade Logeinträge des heutigen Tages
+            LoadTodayLogs();
             InitializeWatchers();
         }
+        private void AddToListBox(string message)
+        {
+            if (!IsUiReady()) return;
+
+            BeginInvoke(new Action(() =>
+            {
+                if (_loadedLogEntries.Add(message)) // vermeide doppelte Anzeige
+                {
+                    listBox_Output.Items.Add(message);
+                    listBox_Output.TopIndex = listBox_Output.Items.Count - 1;
+                }
+            }));
+        }
+
+
+        private void LoadTodayLogs()
+        {
+            try
+            {
+                var todayLogs = _logHandler.GetTodayLogEntries();
+
+                foreach (var log in todayLogs)
+                {
+                    string formatted = $"{log.Timestamp:yyyy-MM-dd HH:mm:ss}: {log.Message}";
+                    if (_loadedLogEntries.Add(formatted))
+                    {
+                        listBox_Output.Items.Add(formatted);
+                    }
+                }
+
+                listBox_Output.TopIndex = listBox_Output.Items.Count - 1;
+            }
+            catch (Exception ex)
+            {
+                AddToListBox($"Fehler beim Laden der Logs: {ex.Message}");
+            }
+        }
+
+
 
         private void InitializeWatchers()
         {
@@ -50,7 +96,6 @@ namespace ArbeitInventur
                 LogMessage($"Fehler beim Starten der Überwachung: {ex.Message}");
             }
         }
-
         private void InitializeDentalCadWatcher()
         {
             if (_fileWatcher != null)
@@ -63,93 +108,55 @@ namespace ArbeitInventur
 
             _fileWatcher = new DentalCadFileWatcher(_logHandler, TimeSpan.FromSeconds(30), 10);
             _fileWatcher.FileHandled += OnFileHandled;
-
-            if (chk_DentalCadWatcher.Checked)
-            {
-                _fileWatcher.StartWatching();
-                _dentalCadWatcherActive = true;
-                LogMessage("DentalCadFileWatcher gestartet.");
-            }
-            else
-            {
-                _fileWatcher.StopWatching();
-                _dentalCadWatcherActive = false;
-                LogMessage("DentalCadFileWatcher gestoppt.");
-            }
         }
 
         private void InitializeFolderUploader()
         {
-            if (_folderUploader != null)
+            if (_folderUploader != null && chk_FolderUploader.Checked != true)
             {
                 _folderUploader.FolderUploaded -= OnFolderUploaded;
                 _folderUploader.StopWatching();
                 _folderUploader.Dispose();
                 _folderUploader = null;
+                AddToListBox("Überwachung von Ordner-Upload gestartet.");
             }
-
-            string localFolder = txt_LocalScanFolder.Text.Trim();
-            string serverFolder = txt_ServerTargetFolder.Text.Trim();
-
-            if (string.IsNullOrWhiteSpace(localFolder) || string.IsNullOrWhiteSpace(serverFolder))
+            else if (chk_FolderUploader.Checked == true)
             {
-                LogMessage("Ungültige Pfade: Lokaler Scan-Ordner oder Server-Zielordner ist leer.");
-                return;
-            }
+                string localFolder = txt_LocalScanFolder.Text.Trim();
+                string serverFolder = txt_ServerTargetFolder.Text.Trim();
 
-            _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder, _logHandler);
-            _folderUploader.FolderUploaded += OnFolderUploaded;
-
-            if (chk_FolderUploader.Checked)
-            {
+                if (string.IsNullOrWhiteSpace(localFolder) || string.IsNullOrWhiteSpace(serverFolder))
+                {
+                    LogMessage("Ungültige Pfade für FolderUploader.");
+                    return;
+                }
+                _folderUploader = new FolderWatcherAndUploader(localFolder, serverFolder, _logHandler);
+                _folderUploader.FolderUploaded += OnFolderUploaded;
                 _folderUploader.StartWatching();
-                _folderUploaderActive = true;
-                LogMessage("FolderWatcherAndUploader gestartet.");
-            }
-            else
-            {
-                _folderUploader.StopWatching();
-                _folderUploaderActive = false;
-                LogMessage("FolderWatcherAndUploader gestoppt.");
+                AddToListBox("Überwachung von Ordner-Upload gestoppt.");
             }
         }
 
+
         private void OnFileHandled(string message)
         {
-            listBox_Output.Items.Add($"FileHandled ausgelöst: {message}");
-
-            if (IsHandleCreated && !IsDisposed)
-            {
-                BeginInvoke(new Action(() =>
-                {
-                    listBox_Output.Items.Add(message);
-                    listBox_Output.TopIndex = listBox_Output.Items.Count - 1;
-                }));
-            }
-            else
-            {
-                listBox_Output.Items.Add("UI nicht bereit für Update: " + message);
-            }
-            _logHandler.LogAction(message);
+            AddToListBox(message);
+            _logHandler.LogAction(message); // wichtig: persistenter Log
         }
 
         private void OnFolderUploaded(string message)
         {
-            if (IsHandleCreated && !IsDisposed)
-            {
-                BeginInvoke(new Action(() =>
-                {
-                    listBox_Output.Items.Add(message);
-                    listBox_Output.TopIndex = listBox_Output.Items.Count - 1;
-                }));
-            }
+            AddToListBox(message);
             _logHandler.LogAction(message);
         }
 
         private void LogMessage(string message)
         {
-            OnFileHandled($"{DateTime.Now}: {message}");
+            string fullMessage = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}";
+            _logHandler.LogAction(fullMessage); // Nur Datei
+            AddToListBox(fullMessage);          // Nur UI
         }
+
 
         private void btn_Exocad_Ordner_Click(object sender, EventArgs e)
         {

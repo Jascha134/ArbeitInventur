@@ -54,6 +54,7 @@ namespace ArbeitInventur.Exocad_Help
             {
                 watcher.EnableRaisingEvents = false;
             }
+            _logHandler.AddToLog($"Überwachung von {localFolderPath} gestoppt.", "Stop");
         }
 
         private async Task OnFileCreated(object sender, FileSystemEventArgs e)
@@ -145,7 +146,6 @@ namespace ArbeitInventur.Exocad_Help
                     }
                 }
 
-                _logHandler.AddToLog($"Ordner {folderName} erfolgreich auf {serverFolderPath} hochgeladen.", "Upload");
                 FolderUploaded?.Invoke($"Ordner {folderName} hochgeladen.");
             }
             catch (UnauthorizedAccessException ex)

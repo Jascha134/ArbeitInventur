@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ArbeitInventur.UserInterface
 {
@@ -14,6 +15,10 @@ namespace ArbeitInventur.UserInterface
         public BenutzerVerwaltung()
         {
             jsonPfad = Path.Combine(Properties.Settings.Default.DataJSON ?? @"C:\DefaultData", jsonDateiName);
+            if(jsonPfad == null)
+            {
+                MessageBox.Show($"Benutzerverwaltung Pfad: {jsonPfad}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         // Benutzer hinzufügen
